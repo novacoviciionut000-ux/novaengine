@@ -5,27 +5,27 @@ void add_velocity(square_t *sq, vec4_t velocity) {
 void update_square(square_t *sq, const Uint8 *keyboard_state) {
     // Update based on keyboard state
     if(keyboard_state[SDL_SCANCODE_UP]) {
-        vec4_t velocity = {0, -vel, 0, 0};
+        vec4_t velocity = {.x=0, .y=-vel, .z=0, .w=0};
         add_velocity(sq, velocity);
     }
     if(keyboard_state[SDL_SCANCODE_DOWN]) {
-        vec4_t velocity = {0, vel, 0, 0};
+        vec4_t velocity = {.x=0, .y=vel, .z=0, .w=0};
         add_velocity(sq, velocity);
     }
     if(keyboard_state[SDL_SCANCODE_LEFT]) {
-        vec4_t velocity = {-vel, 0, 0, 0};
+        vec4_t velocity = {.x=-vel, .y=0, .z=0, .w=0};
         add_velocity(sq, velocity);
     }
     if(keyboard_state[SDL_SCANCODE_RIGHT]) {
-        vec4_t velocity = {vel, 0, 0, 0};
+        vec4_t velocity = {.x=vel, .y=0, .z=0, .w=0};
         add_velocity(sq, velocity);
     }
     if(keyboard_state[SDL_SCANCODE_W]) {
-        vec4_t velocity = {0, 0, -vel, 0};
+        vec4_t velocity = {.x=0, .y=0, .z=-vel, .w=0};
         add_velocity(sq, velocity);
     }
     if(keyboard_state[SDL_SCANCODE_S]) {
-        vec4_t velocity = {0, 0, vel, 0};
+        vec4_t velocity = {.x=0, .y=0, .z=vel, .w=0};
         add_velocity(sq, velocity); 
     }
 }
@@ -47,9 +47,9 @@ void render_cube(const cube_t *cube, SDL_Renderer *renderer){
     //bottom face:
     //this is the cumulative matrix, basically
     mat4_t id = mat4_identity();
-    mat4_t m_rot_z = rot_z(&id, cube->angles.z);
-    mat4_t m_rot_y = rot_y(&m_rot_z, cube->angles.y);
-    mat4_t final_matrix = rot_x(&m_rot_y, cube->angles.x);//the respective rotation matrices, they are applied in the order of x, then y, then z, so we need to multiply them in reverse order
+    mat4_t m_rot_z = rot_z(&id, cube->angles.z, true);
+    mat4_t m_rot_y = rot_y(&m_rot_z, cube->angles.y, true);
+    mat4_t final_matrix = rot_x(&m_rot_y, cube->angles.x, true);//the respective rotation matrices, they are applied in the order of x, then y, then z, so we need to multiply them in reverse order
     int y_offset = SCREEN_HEIGHT / 2;//we need to add these so that the cube is actually visible on the screen
     int x_offset = SCREEN_WIDTH / 2;
     for(int i = 0; i < 8; i++){
@@ -95,7 +95,18 @@ void update_cube(cube_t *cube, const Uint8 *keyboard_state){
     if(keyboard_state[SDL_SCANCODE_RIGHT]) {
         cube->angles.y -= 0.01;
     }
-
+    if(keyboard_state[SDL_SCANCODE_W]){
+        cube -> pos.z -= vel;
+    }
+    if(keyboard_state[SDL_SCANCODE_S]){
+        cube -> pos.z += vel;   
+    }
+    if(keyboard_state[SDL_SCANCODE_A]){
+        cube -> pos.x -= vel;
+    }
+    if(keyboard_state[SDL_SCANCODE_D]){
+        cube -> pos.x += vel;
+    }
 }
 void initialize_cube_position(cube_t** cube, vec4_t pos, double length, double width, double height){
     double half_length = length / 2.0;
@@ -104,24 +115,24 @@ void initialize_cube_position(cube_t** cube, vec4_t pos, double length, double w
     (*cube)->pos = pos;
     //world vertices are the actual positions of the vertices in the world, they will be transformed by the rotation and translation to get the final positions for rendering, local vertices are the positions of the vertices relative to the center of the cube, they are used as a template for the transformations
     //bottom face
-    (*cube)->world_verts[0] = (vec4_t){((*cube)->pos.x - half_length), (*cube)->pos.y - half_width, (*cube)->pos.z + half_height, FOCAL}; //front left
-    (*cube)->world_verts[1] = (vec4_t){(*cube)->pos.x + half_length, (*cube)->pos.y - half_width, (*cube)->pos.z + half_height, FOCAL}; //front right
-    (*cube)->world_verts[2] = (vec4_t){(*cube)->pos.x + half_length, (*cube)->pos.y - half_width, (*cube)->pos.z - half_height, FOCAL}; //back right
-    (*cube)->world_verts[3] = (vec4_t){(*cube)->pos.x - half_length, (*cube)->pos.y - half_width, (*cube)->pos.z - half_height, FOCAL}; //back left
+    (*cube)->world_verts[0] = (vec4_t){.x=(*cube)->pos.x - half_length, .y=(*cube)->pos.y - half_width, .z=(*cube)->pos.z + half_height, .w=FOCAL}; //front left
+    (*cube)->world_verts[1] = (vec4_t){.x=(*cube)->pos.x + half_length, .y=(*cube)->pos.y - half_width, .z=(*cube)->pos.z + half_height, .w=FOCAL}; //front right
+    (*cube)->world_verts[2] = (vec4_t){.x=(*cube)->pos.x + half_length, .y=(*cube)->pos.y - half_width, .z=(*cube)->pos.z - half_height, .w=FOCAL}; //back right
+    (*cube)->world_verts[3] = (vec4_t){.x=(*cube)->pos.x - half_length, .y=(*cube)->pos.y - half_width, .z=(*cube)->pos.z - half_height, .w=FOCAL}; //back left
     //top face
-    (*cube)->world_verts[4] = (vec4_t){(*cube)->pos.x - half_length, (*cube)->pos.y + half_width, (*cube)->pos.z + half_height, FOCAL}; //front left
-    (*cube)->world_verts[5] = (vec4_t){(*cube)->pos.x + half_length, (*cube)->pos.y + half_width, (*cube)->pos.z + half_height, FOCAL}; //front right
-    (*cube)->world_verts[6] = (vec4_t){(*cube)->pos.x + half_length, (*cube)->pos.y + half_width, (*cube)->pos.z - half_height, FOCAL}; //back right
-    (*cube)->world_verts[7] = (vec4_t){(*cube)->pos.x - half_length, (*cube)->pos.y + half_width, (*cube)->pos.z - half_height, FOCAL}; //back left
+    (*cube)->world_verts[4] = (vec4_t){.x=(*cube)->pos.x - half_length, .y=(*cube)->pos.y + half_width, .z=(*cube)->pos.z + half_height, .w=FOCAL}; //front left
+    (*cube)->world_verts[5] = (vec4_t){.x=(*cube)->pos.x + half_length, .y=(*cube)->pos.y + half_width, .z=(*cube)->pos.z + half_height, .w=FOCAL}; //front right
+    (*cube)->world_verts[6] = (vec4_t){.x=(*cube)->pos.x + half_length, .y=(*cube)->pos.y + half_width, .z=(*cube)->pos.z - half_height, .w=FOCAL}; //back right
+    (*cube)->world_verts[7] = (vec4_t){.x=(*cube)->pos.x - half_length, .y=(*cube)->pos.y + half_width, .z=(*cube)->pos.z - half_height, .w=FOCAL}; //back left
     //local vertices are defined relative to the center, so we just need to center it around 0,0,0
-    (*cube)->local_verts[0] = (vec4_t){-half_length, -half_width, half_height, FOCAL}; //front left
-    (*cube)->local_verts[1] = (vec4_t){half_length, -half_width, half_height, FOCAL}; //front right
-    (*cube)->local_verts[2] = (vec4_t){half_length, -half_width, -half_height, FOCAL}; //back right
-    (*cube)->local_verts[3] = (vec4_t){-half_length, -half_width, -half_height, FOCAL}; //back left
-    (*cube)->local_verts[4] = (vec4_t){-half_length, half_width, half_height, FOCAL}; //front left
-    (*cube)->local_verts[5] = (vec4_t){half_length, half_width, half_height, FOCAL}; //front right
-    (*cube)->local_verts[6] = (vec4_t){half_length, half_width, -half_height, FOCAL}; //back right
-    (*cube)->local_verts[7] = (vec4_t){-half_length, half_width, -half_height, FOCAL}; //back left
+    (*cube)->local_verts[0] = (vec4_t){.x=-half_length, .y=-half_width, .z=half_height, .w=FOCAL}; //front left
+    (*cube)->local_verts[1] = (vec4_t){.x=half_length, .y=-half_width, .z=half_height, .w=FOCAL}; //front right
+    (*cube)->local_verts[2] = (vec4_t){.x=half_length, .y=-half_width, .z=-half_height, .w=FOCAL}; //back right
+    (*cube)->local_verts[3] = (vec4_t){.x=-half_length, .y=-half_width, .z=-half_height, .w=FOCAL}; //back left
+    (*cube)->local_verts[4] = (vec4_t){.x=-half_length, .y=half_width, .z=half_height, .w=FOCAL}; //front left
+    (*cube)->local_verts[5] = (vec4_t){.x=half_length, .y=half_width, .z=half_height, .w=FOCAL}; //front right
+    (*cube)->local_verts[6] = (vec4_t){.x=half_length, .y=half_width, .z=-half_height, .w=FOCAL}; //back right
+    (*cube)->local_verts[7] = (vec4_t){.x=-half_length, .y=half_width, .z=-half_height, .w=FOCAL}; //back left
 
 }
 cube_t* create_cube(vec4_t pos, double length, double width, double height){

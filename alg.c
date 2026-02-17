@@ -173,10 +173,16 @@ mat4_t mat4_identity(){
     return I;
 }
 //matricile de rotatie sunt construite pornind de la matricea identitate, apoi se modifică elementele corespunzătoare pentru a reprezenta rotația în jurul axei specificate. Funcțiile de rotație multiplică matricea de intrare cu matricea de rotație rezultată pentru a obține noua matrice transformata.
-mat4_t rot_z(const mat4_t *mat, double angle){
+mat4_t rot_z(const mat4_t *mat, double angle, bool precise){
     mat4_t res = mat4_identity();
-    double cosine = mat_cos(angle);
-    double sine = mat_sin(angle);
+    double sine = 0, cosine = 0;
+    if(!precise){
+        cosine = mat_cos(angle);
+        sine = mat_sin(angle);
+    } else {
+        cosine = cos(angle);
+        sine = sin(angle);
+    }
     res.m[0][0] = cosine;
     res.m[0][1] = -sine;
     res.m[1][0] = sine;
@@ -184,10 +190,16 @@ mat4_t rot_z(const mat4_t *mat, double angle){
     return mlt_mat4(mat, &res);
 }
 
-mat4_t rot_y(const mat4_t *mat, double angle){
+mat4_t rot_y(const mat4_t *mat, double angle, bool precise){
     mat4_t res = mat4_identity();
-    double cosine = mat_cos(angle);
-    double sine = mat_sin(angle);
+    double sine = 0, cosine = 0;
+    if(!precise){
+        cosine = mat_cos(angle);
+        sine = mat_sin(angle);
+    } else {
+        cosine = cos(angle);
+        sine = sin(angle);
+    }
     res.m[0][0] = cosine;
     res.m[0][2] = sine;
     res.m[2][0] = -sine;
@@ -195,10 +207,17 @@ mat4_t rot_y(const mat4_t *mat, double angle){
     return mlt_mat4(mat, &res);
 }
 
-mat4_t rot_x(const mat4_t *mat, double angle){
+mat4_t rot_x(const mat4_t *mat, double angle, bool precise){
     mat4_t res = mat4_identity();
-    double cosine = mat_cos(angle);
-    double sine = mat_sin(angle);
+    double sine = 0, cosine = 0;
+    if(!precise){
+        cosine = mat_cos(angle);
+        sine = mat_sin(angle);
+    } else {
+        cosine = cos(angle);
+        sine = sin(angle);
+    }
+
     res.m[1][1] = cosine;
     res.m[1][2] = -sine;
     res.m[2][1] = sine;

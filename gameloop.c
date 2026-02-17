@@ -21,8 +21,8 @@ bool initializeGame(SDL_Window** window, SDL_Renderer** renderer) {
     return true;
 }
 void cleanUp(SDL_Window* window, SDL_Renderer* renderer) {
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    if(renderer)SDL_DestroyRenderer(renderer);
+    if(window)SDL_DestroyWindow(window);
     SDL_Quit();
 }
 square_t create_square(vec4_t pos, double length, double width) {
@@ -54,7 +54,7 @@ void gameLoop(){
         goto CLEANUP;
     }
     bool running = true;
-    cube_t* myCube = create_cube((vec4_t){0, 0, 400, 0}, 300.0, 300.0, 300.0);
+    cube_t* myCube = create_cube((vec4_t){.x=0, .y=0, .z=400, .w=0}, 300.0, 300.0, 300.0);
     if(!myCube){
         printf("Failed to create cube\n");
         goto CLEANUP;
@@ -75,10 +75,11 @@ void gameLoop(){
 
     }
     CLEANUP:
-    cleanUp(window, renderer);
     if(myCube){
         free(myCube);
     }
+    cleanUp(window, renderer);
+
 
 
 

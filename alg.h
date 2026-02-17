@@ -62,9 +62,9 @@ double mat_cos(double angle);
 vec3_t scale_vec3(vec3_t vec, double factor);
 vec4_t scale_vec4(vec4_t vec, double factor);
 mat4_t mat4_identity();
-mat4_t rot_z(const mat4_t *mat, double angle);
-mat4_t rot_y(const mat4_t *mat, double angle);
-mat4_t rot_x(const mat4_t *mat, double angle);
+mat4_t rot_z(const mat4_t *mat, double angle, bool precise);
+mat4_t rot_y(const mat4_t *mat, double angle, bool precise);
+mat4_t rot_x(const mat4_t *mat, double angle, bool precise);
 vec4_t apply_transform(const mat4_t *transform, const vec4_t *vec);
 
 #endif
