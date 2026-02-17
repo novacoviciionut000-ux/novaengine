@@ -1,0 +1,20 @@
+#ifndef MATH_H
+#define MATH_H
+#include "libs.h"
+
+
+typedef struct{
+  union{
+    struct{double x,y,z;};
+    double vals[3];
+    
+  }
+  
+}vec3_t;
+typedef struct{
+  union{
+    float m[4][4];
+    float v[16];
+  }
+  
+}mat4_t;

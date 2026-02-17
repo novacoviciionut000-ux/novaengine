@@ -1,0 +1,378 @@
+#include "alg.h"
+
+mat4_t mlt_mat4(const mat4_t *matA, const mat4_t *matB){
+  mat4_t res = {0};//classical matrix multiplication, we need to iterate line-first in matA and row-first in matB, and repeat that process for each line 4 or 3 times
+  //depending on wheter it's a mat4_t or mat3_t
+  uint8_t curr_ptr = 0;
+  for(uint8_t rep = 0; rep < 4;rep++){
+    for(uint8_t curr_it = 0; curr_it < 4;curr_it++){
+      for(curr_ptr = 0; curr_ptr < 4; curr_ptr++){
+	res.m[rep][curr_it] += (matA->m)[rep][curr_ptr] * (matB->m)[curr_ptr][curr_it];      
+      }
+     
+
+    }
+  }
+  return res;
+  
+}
+
+mat3_t mlt_mat3(const mat3_t *matA, const mat3_t *matB){
+  mat3_t res = {0};
+  uint8_t curr_ptr = 0;
+  for(uint8_t rep = 0; rep < 3;rep++){
+    for(uint8_t curr_it = 0; curr_it < 3;curr_it++){
+      for(curr_ptr = 0; curr_ptr < 3; curr_ptr++){
+	res.m[rep][curr_it] += (matA->m)[rep][curr_ptr] * (matB->m)[curr_ptr][curr_it];
+      
+      }
+    
+    }
+  }
+  return res;
+  
+  
+}
+
+mat4_t add_mat4(const mat4_t *matA, const mat4_t *matB){
+  mat4_t res = {0};
+  for(uint8_t i = 0; i < 4;i++){
+    for(uint8_t j = 0; j < 4;j++){
+      res.m[i][j] = (matA->m)[i][j] + (matB -> m)[i][j];
+    }
+  }
+  return res;
+
+}
+
+mat3_t add_mat3(const mat3_t *matA, const mat3_t *matB){
+  mat3_t res = {0};
+  for(uint8_t i = 0; i < 3;i++){
+    for(uint8_t j = 0; j < 3;j++){
+      res.m[i][j] = (matA->m)[i][j] + (matB -> m)[i][j];
+    }
+  }
+  return res;
+  
+  
+}
+
+double dotprod3(const vec3_t *vecA, const vec3_t *vecB){
+  return (vecA -> x * vecB -> x) + (vecA -> y * vecB->y) + (vecA->z * vecB->z);
+}
+double dotprod4(const vec4_t *vecA, const vec4_t *vecB){
+  return (vecA -> x * vecB -> x) + (vecA -> y * vecB->y) + (vecA->z * vecB->z) + (vecA->w * vecB->w);
+}
+
+vec3_t crossprod3(const vec3_t *vecA, const vec3_t *vecB){
+  //i need to calculate a determinant
+  //this function will be used to compute crossprod4 as well because the w component is 0
+  vec3_t res = {0};
+  //expand the determinant for readability
+  double res_x = (vecA->y * vecB->z) - (vecA->z * vecB->y);
+  double res_y = -1*((vecA->x * vecB -> z)-(vecA->z * vecB->x));
+  double res_z = (vecA->x * vecB->y) - (vecA->y * vecB -> x);
+  res.x = res_x;
+  res.y = res_y;
+  res.z = res_z;
+  return res;
+    
+  
+  
+}
+vec4_t crossprod4(const vec4_t *vecA, const vec4_t *vecB){
+  vec4_t res = {0};
+  double res_x = (vecA->y * vecB->z) - (vecA->z * vecB->y);
+  double res_y = -1*((vecA->x * vecB -> z)-(vecA->z * vecB->x));
+  double res_z = (vecA->x * vecB->y) - (vecA->y * vecB -> x);
+  res.x = res_x;
+  res.y = res_y;
+  res.z = res_z;
+  res.w = 0;
+  return res;
+  
+  
+  
+
+}//ignore the w-component
+vec3_t add_vec3(const vec3_t *vecA, const vec3_t *vecB){
+  vec3_t res = {0};
+  res.x = vecA->x + vecB->x;
+  res.y = vecA->y + vecB->y;
+  res.z = vecA->z + vecB->z;
+  return res;
+  
+}
+vec4_t add_vec4(const vec4_t *vecA, const vec4_t *vecB){
+  vec4_t res = {0};
+  res.x = vecA->x + vecB->x;
+  res.y = vecA->y + vecB->y;
+  res.z = vecA->z + vecB->z;
+  res.w = vecA->w + vecB->w;
+  return res;
+
+
+
+}
+//Use these functions with caution, they require an already-allocated buffer of >= size of the data type, otherwise they WILL overflow.
+void mlt_mat4_p(mat4_t *dest, const mat4_t *matA, const mat4_t *matB){
+  mat4_t res = mlt_mat4(matA, matB);
+  *dest = res;
+}
+void mlt_mat3_p(mat3_t *dest, const mat3_t *matA, const mat3_t *matB){
+  mat3_t res = mlt_mat3(matA,matB);
+  *dest = res;
+  
+  
+}
+void add_mat4_p(mat4_t *dest, const mat4_t *matA, const mat4_t *matB){
+  mat4_t res = add_mat4(matA, matB);
+  *dest = res;
+}
+void add_mat3_p(mat3_t *dest, const mat3_t *matA, const mat3_t *matB){
+  mat3_t res = add_mat3(matA, matB);
+  *dest = res;
+  
+}
+void crossprod3_p(vec3_t *dest, const vec3_t *vecA, const vec3_t *vecB){
+  vec3_t res = crossprod3(vecA, vecB);
+  *dest = res;
+  
+
+}//cross product only exists in 3D
+void crossprod4_p(vec4_t *dest, const vec4_t *vecA, const vec4_t *vecB){
+  vec4_t res = crossprod4(vecA, vecB);
+  *dest = res;
+
+}//ignore the w-component
+void add_vec3_p(vec3_t *dest, const vec3_t *vecA, const vec3_t *vecB){
+  vec3_t res = add_vec3(vecA, vecB);
+  *dest = res;
+  
+}
+void add_vec4_p(vec4_t *dest, const vec4_t *vecA, const vec4_t *vecB){
+  vec4_t res = add_vec4(vecA, vecB);
+  *dest = res;
+
+
+}
+
+
+double mat_sin(double angle){
+  double initial_angle = angle;
+  double anglesquared = initial_angle * initial_angle;
+  double first_term = initial_angle * anglesquared;
+  double second_term = first_term * anglesquared;
+  double third_term = second_term * anglesquared;
+  double fourth_term = third_term * anglesquared;
+  double threefinv = 0.1666666666666666, fivefinv = 0.0083333333333333, sevenfinv = 0.0001984126984127, ninefinv = 0.0000027557319224;
+  return initial_angle - ((first_term)*threefinv) + ((second_term)*fivefinv) - ((third_term)*sevenfinv) + ((fourth_term) * ninefinv);
+  
+  
+}//we will use the first 5 terms of the taylor series to approximate sine and cosine, the error is insignificant in the interval [-pi, pi]
+double mat_cos(double angle){
+
+  return mat_sin(angle + M_PIdiv2);
+  
+  
+}
+
+
+mat4_t mlt_mat4(const mat4_t *matA, const mat4_t *matB){
+  mat4_t res = {0};//classical matrix multiplication, we need to iterate line-first in matA and row-first in matB, and repeat that process for each line 4 or 3 times
+  //depending on wheter it's a mat4_t or mat3_t
+  uint8_t curr_ptr = 0;
+  for(uint8_t rep = 0; rep < 4;rep++){
+    for(uint8_t curr_it = 0; curr_it < 4;curr_it++){
+      for(curr_ptr = 0; curr_ptr < 4; curr_ptr++){
+	res.m[rep][curr_it] += (matA->m)[rep][curr_ptr] * (matB->m)[curr_ptr][curr_it];      
+      }
+     
+
+    }
+  }
+  return res;
+  
+}
+
+mat3_t mlt_mat3(const mat3_t *matA, const mat3_t *matB){
+  mat3_t res = {0};
+  uint8_t curr_ptr = 0;
+  for(uint8_t rep = 0; rep < 3;rep++){
+    for(uint8_t curr_it = 0; curr_it < 3;curr_it++){
+      for(curr_ptr = 0; curr_ptr < 3; curr_ptr++){
+	res.m[rep][curr_it] += (matA->m)[rep][curr_ptr] * (matB->m)[curr_ptr][curr_it];
+      
+      }
+    
+    }
+  }
+  return res;
+  
+  
+}
+
+mat4_t add_mat4(const mat4_t *matA, const mat4_t *matB){
+  mat4_t res = {0};
+  for(uint8_t i = 0; i < 4;i++){
+    for(uint8_t j = 0; j < 4;j++){
+      res.m[i][j] = (matA->m)[i][j] + (matB -> m)[i][j];
+    }
+  }
+  return res;
+
+}
+
+mat3_t add_mat3(const mat3_t *matA, const mat3_t *matB){
+  mat3_t res = {0};
+  for(uint8_t i = 0; i < 3;i++){
+    for(uint8_t j = 0; j < 3;j++){
+      res.m[i][j] = (matA->m)[i][j] + (matB -> m)[i][j];
+    }
+  }
+  return res;
+  
+  
+}
+
+double dotprod3(const vec3_t *vecA, const vec3_t *vecB){
+  return (vecA -> x * vecB -> x) + (vecA -> y * vecB->y) + (vecA->z * vecB->z);
+}
+double dotprod4(const vec4_t *vecA, const vec4_t *vecB){
+  return (vecA -> x * vecB -> x) + (vecA -> y * vecB->y) + (vecA->z * vecB->z) + (vecA->w * vecB->w);
+}
+
+vec3_t crossprod3(const vec3_t *vecA, const vec3_t *vecB){
+  //i need to calculate a determinant
+  //this function will be used to compute crossprod4 as well because the w component is 0
+  vec3_t res = {0};
+  //expand the determinant for readability
+  double res_x = (vecA->y * vecB->z) - (vecA->z * vecB->y);
+  double res_y = -1*((vecA->x * vecB -> z)-(vecA->z * vecB->x));
+  double res_z = (vecA->x * vecB->y) - (vecA->y * vecB -> x);
+  res.x = res_x;
+  res.y = res_y;
+  res.z = res_z;
+  return res;
+    
+  
+  
+}
+vec4_t crossprod4(const vec4_t *vecA, const vec4_t *vecB){
+  vec4_t res = {0};
+  double res_x = (vecA->y * vecB->z) - (vecA->z * vecB->y);
+  double res_y = -1*((vecA->x * vecB -> z)-(vecA->z * vecB->x));
+  double res_z = (vecA->x * vecB->y) - (vecA->y * vecB -> x);
+  res.x = res_x;
+  res.y = res_y;
+  res.z = res_z;
+  res.w = 0;
+  return res;
+  
+  
+  
+
+}//ignore the w-component
+vec3_t add_vec3(const vec3_t *vecA, const vec3_t *vecB){
+  vec3_t res = {0};
+  res.x = vecA->x + vecB->x;
+  res.y = vecA->y + vecB->y;
+  res.z = vecA->z + vecB->z;
+  return res;
+  
+}
+vec4_t add_vec4(const vec4_t *vecA, const vec4_t *vecB){
+  vec4_t res = {0};
+  res.x = vecA->x + vecB->x;
+  res.y = vecA->y + vecB->y;
+  res.z = vecA->z + vecB->z;
+  res.w = vecA->w + vecB->w;
+  return res;
+
+
+
+}
+//Use these functions with caution, they require an already-allocated buffer of >= size of the data type, otherwise they WILL overflow.
+void mlt_mat4_p(mat4_t *dest, const mat4_t *matA, const mat4_t *matB){
+  mat4_t res = mlt_mat4(matA, matB);
+  *dest = res;
+}
+void mlt_mat3_p(mat3_t *dest, const mat3_t *matA, const mat3_t *matB){
+  mat3_t res = mlt_mat3(matA,matB);
+  *dest = res;
+  
+  
+}
+void add_mat4_p(mat4_t *dest, const mat4_t *matA, const mat4_t *matB){
+  mat4_t res = add_mat4(matA, matB);
+  *dest = res;
+}
+void add_mat3_p(mat3_t *dest, const mat3_t *matA, const mat3_t *matB){
+  mat3_t res = add_mat3(matA, matB);
+  *dest = res;
+  
+}
+void crossprod3_p(vec3_t *dest, const vec3_t *vecA, const vec3_t *vecB){
+  vec3_t res = crossprod3(vecA, vecB);
+  *dest = res;
+  
+
+}//cross product only exists in 3D
+void crossprod4_p(vec4_t *dest, const vec4_t *vecA, const vec4_t *vecB){
+  vec4_t res = crossprod4(vecA, vecB);
+  *dest = res;
+
+}//ignore the w-component
+void add_vec3_p(vec3_t *dest, const vec3_t *vecA, const vec3_t *vecB){
+  vec3_t res = add_vec3(vecA, vecB);
+  *dest = res;
+  
+}
+void add_vec4_p(vec4_t *dest, const vec4_t *vecA, const vec4_t *vecB){
+  vec4_t res = add_vec4(vecA, vecB);
+  *dest = res;
+
+
+}
+
+
+double mat_sin(double angle){
+  double initial_angle = angle;
+  double anglesquared = initial_angle * initial_angle;
+  double first_term = initial_angle * anglesquared;
+  double second_term = first_term * anglesquared;
+  double third_term = second_term * anglesquared;
+  double fourth_term = third_term * anglesquared;
+  double threefinv = 0.1666666666666666, fivefinv = 0.0083333333333333, sevenfinv = 0.0001984126984127, ninefinv = 0.0000027557319224;
+  return initial_angle - ((first_term)*threefinv) + ((second_term)*fivefinv) - ((third_term)*sevenfinv) + ((fourth_term) * ninefinv);
+  
+  
+}//we will use the first 5 terms of the taylor series to approximate sine and cosine, the error is insignificant in the interval [-pi, pi]
+double mat_cos(double angle){
+
+  return mat_sin(angle + M_PIdiv2);
+  
+  
+}
+vec3_t scale_vec3(vec3_t vec, double factor){
+  
+  vec3_t res = {0};
+  res.x = vec.x * factor;
+  res.y = vec.y * factor;
+  res.z = vec.z * factor;
+  return res;
+  
+  
+}
+vec4_t scale_vec4(vec4_t vec, double factor){
+
+  vec4_t res = {0};
+  res.x = vec.x * factor;
+  res.y = vec.y * factor;
+  res.z = vec.z * factor;
+  res.w = vec.w * factor;
+  return res;
+  
+
+
+}
