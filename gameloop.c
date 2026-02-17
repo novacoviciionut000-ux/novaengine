@@ -1,24 +1,24 @@
 #include "gameloop.h"
 #include "squares.h"
 
-void initializeGame(SDL_Window** window, SDL_Renderer** renderer) {
+bool initializeGame(SDL_Window** window, SDL_Renderer** renderer) {
 
     if(!SDL_Init(SDL_INIT_VIDEO)) {
         printf("SDL could not initialize: %s\n", SDL_GetError());
-        exit(1);
+        return false;
     }
 
-    *window = SDL_CreateWindow("Game Loop", 640, 480, 0);
+    *window = SDL_CreateWindow("Game Loop", SCREEN_WIDTH, SCREEN_HEIGHT, 0);
     if (*window == NULL) {
         printf("Could not create window: %s\n", SDL_GetError());
-        exit(1);
+        return false;
     }
     *renderer = SDL_CreateRenderer(*window, NULL);
     if (*renderer == NULL) {
         printf("Could not create renderer: %s\n", SDL_GetError());
-        SDL_DestroyWindow(*window);
-        exit(1);
+        return false;
     }
+    return true;
 }
 void cleanUp(SDL_Window* window, SDL_Renderer* renderer) {
     SDL_DestroyRenderer(renderer);
@@ -32,31 +32,41 @@ square_t create_square(vec4_t pos, double length, double width) {
     sq.width = width;
     return sq;
 }
+void handle_event_and_delta(long deltaTime, long *lastTime, bool *running, cube_t *myCube){
+    SDL_Event event;
+    while(SDL_PollEvent(&event)){
+        if(event.type == SDL_EVENT_QUIT){
+            *running = false;
+        }
+    }
+    const uint8_t *keyboard_state = (uint8_t*)SDL_GetKeyboardState(NULL);
+    long currentTime = SDL_GetTicks();
+    if(currentTime - *lastTime >= deltaTime) {
+        *lastTime = currentTime;
+        update_cube(myCube, keyboard_state);
+    }
+}
 void gameLoop(){
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
-    initializeGame(&window, &renderer);
+    if(!initializeGame(&window, &renderer)) {
+        printf("Failed to initialize game\n");
+        goto CLEANUP;
+    }
     bool running = true;
-    vec4_t position = {320, 240, 10, 45}; // x, y, z, focal_length
-    square_t sq = create_square(position, 50, 50);
+    cube_t* myCube = create_cube((vec4_t){0, 0, 400, 0}, 300.0, 300.0, 300.0);
+    if(!myCube){
+        printf("Failed to create cube\n");
+        goto CLEANUP;
+    }
+    const long deltaTime = 5;
+    long lastTime = SDL_GetTicks();
     while(running){
-        SDL_Event event;
-        while(SDL_PollEvent(&event)){
-            if(event.type == SDL_EVENT_QUIT){
-                running = false;
-            }
-        }
-        const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
-        const long deltaTime = 100;
-        long lastTime = 0;
-        long currentTime = SDL_GetTicks();
-        if(currentTime - lastTime >= deltaTime) {
-            lastTime = currentTime;
-            update_square(&sq, keyboard_state);
-        }
+        handle_event_and_delta(deltaTime, &lastTime, &running, myCube);
+
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        render_square(&sq, renderer);
+        render_cube(myCube, renderer);
 
 
         // Game rendering logic goes here
@@ -64,8 +74,12 @@ void gameLoop(){
 
 
     }
-
+    CLEANUP:
     cleanUp(window, renderer);
+    if(myCube){
+        free(myCube);
+    }
+
 
 
 }

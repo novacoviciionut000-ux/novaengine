@@ -1,7 +1,0 @@
-#ifndef LIBS_H
-#define LIBS_H
-#include <stdint.h>
-#include <stdlib.h>
-#include <math.h>
-#include <SDL3/SDL.h>
-#endif
