@@ -38,20 +38,22 @@ void render_square(const square_t *sq, SDL_Renderer *renderer) {
     SDL_RenderFillRect(renderer, &rect);
 }
 
-void render_cube(const cube_t *cube, SDL_Renderer *renderer){
-    //the cube is made of 12 lines
-    SDL_Point points[8];
+void get_world_points(const cube_t *cube, SDL_Point *points){//this calculates the projection
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    //read the header for explanation of the vertex order and which lines to draw
-    //bottom face:
+    int y_offset = SCREEN_HEIGHT / 2;//we need to add these so that the cube is actually visible on the screen
+    int x_offset = SCREEN_WIDTH / 2;
+    for(int i = 0; i < 8; i++){
+
+        (points)[i].x = (int)((cube->world_verts[i].x / cube->world_verts[i].z) * cube->world_verts[i].w + x_offset);
+        (points)[i].y = (int)((cube->world_verts[i].y / cube->world_verts[i].z) * cube->world_verts[i].w + y_offset);
+    }
+}
+void rotate_cube(cube_t *cube){
     //this is the cumulative matrix, basically
     mat4_t id = mat4_identity();
     mat4_t m_rot_z = rot_z(&id, cube->angles.z, true);
     mat4_t m_rot_y = rot_y(&m_rot_z, cube->angles.y, true);
-    mat4_t final_matrix = rot_x(&m_rot_y, cube->angles.x, true);//the respective rotation matrices, they are applied in the order of x, then y, then z, so we need to multiply them in reverse order
-    int y_offset = SCREEN_HEIGHT / 2;//we need to add these so that the cube is actually visible on the screen
-    int x_offset = SCREEN_WIDTH / 2;
+    mat4_t final_matrix = rot_x(&m_rot_y, cube->angles.x, true);
     for(int i = 0; i < 8; i++){
         // A. Rotate (from Local Storage)
         vec4_t rotated = apply_transform(&final_matrix, &cube->local_verts[i]);
@@ -62,11 +64,19 @@ void render_cube(const cube_t *cube, SDL_Renderer *renderer){
         // C. Project (3D -> 2D)
         if(world_pos.z <= 0.1) world_pos.z = 0.1; 
 
-        points[i].x = (int)((world_pos.x / world_pos.z) * world_pos.w + x_offset);
-        points[i].y = (int)((world_pos.y / world_pos.z) * world_pos.w + y_offset);
+        cube -> world_verts[i] = world_pos;
     }
 
+}
+void render_cube(const cube_t *cube, SDL_Renderer *renderer){
+    //the cube is made of 12 lines
+    SDL_Point points[8];
+    get_world_points(cube, points);
 
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    //read the header for explanation of the vertex order and which lines to draw
+    //bottom face:
     SDL_RenderLine(renderer, points[0].x, points[0].y, points[1].x, points[1].y);
     SDL_RenderLine(renderer, points[1].x, points[1].y, points[2].x, points[2].y);
     SDL_RenderLine(renderer, points[2].x, points[2].y, points[3].x, points[3].y);
@@ -81,8 +91,42 @@ void render_cube(const cube_t *cube, SDL_Renderer *renderer){
         SDL_RenderLine(renderer, points[i].x, points[i].y, points[i+4].x, points[i+4].y);
     }
 }
-
-void update_cube(cube_t *cube, const Uint8 *keyboard_state){
+input_state_t get_input(const uint8_t *keyboard_state){
+    input_state_t input = {0};
+    input.up = keyboard_state[SDL_SCANCODE_UP];
+    input.down = keyboard_state[SDL_SCANCODE_DOWN];
+    input.left = keyboard_state[SDL_SCANCODE_A];
+    input.right = keyboard_state[SDL_SCANCODE_D];
+    input.forward = keyboard_state[SDL_SCANCODE_W];
+    input.backward = keyboard_state[SDL_SCANCODE_S];
+    return input;
+}
+vec4_t get_velocity_from_input(const input_state_t *input){
+    vec4_t velocity = {0};
+    if(input->up) {
+        velocity.y = vel;
+    }
+    if(input->down) {
+        velocity.y = -vel;
+    }
+    if(input->left) {
+        velocity.x = vel;
+    }
+    if(input->right) {
+        velocity.x = -vel;
+    }
+    if(input->forward){
+        velocity.z = -vel;
+    }
+    if(input->backward){
+        velocity.z = vel;
+    }
+    return velocity;
+}
+void update_cube(cube_t *cube, const uint8_t *keyboard_state){
+    vec4_t velocity = {0};
+    input_state_t input = get_input(keyboard_state);
+    velocity = get_velocity_from_input(&input);
     if(keyboard_state[SDL_SCANCODE_UP]) {
         cube->angles.x += 0.01;
     }
@@ -95,18 +139,8 @@ void update_cube(cube_t *cube, const Uint8 *keyboard_state){
     if(keyboard_state[SDL_SCANCODE_RIGHT]) {
         cube->angles.y -= 0.01;
     }
-    if(keyboard_state[SDL_SCANCODE_W]){
-        cube -> pos.z -= vel;
-    }
-    if(keyboard_state[SDL_SCANCODE_S]){
-        cube -> pos.z += vel;   
-    }
-    if(keyboard_state[SDL_SCANCODE_A]){
-        cube -> pos.x -= vel;
-    }
-    if(keyboard_state[SDL_SCANCODE_D]){
-        cube -> pos.x += vel;
-    }
+    cube -> pos = add_vec4(&cube->pos, &velocity);
+    rotate_cube(cube);
 }
 void initialize_cube_position(cube_t** cube, vec4_t pos, real length, real width, real height){
     real half_length = length / 2.0;

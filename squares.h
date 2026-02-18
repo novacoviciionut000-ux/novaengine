@@ -11,6 +11,10 @@ typedef struct{
     real length, width;
 }square_t;
 typedef struct{
+    bool up, down, left, right, forward, backward;
+
+}input_state_t;
+typedef struct{
 
     real x,y,z;//these are stored in radians and represent the rotation around the x, y and z axes respectively, in that order, following the convention of Euler angles (yaw, pitch, roll)
 
