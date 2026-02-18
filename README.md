@@ -14,7 +14,7 @@ A lightweight graphics/game engine library written in C, implementing low-level 
 
 ```
 alg.c/alg.h          - Mathematics library (vectors, matrices, trigonometry)
-squares.c/squares.h  - Square rendering with 3D positioning and perspective
+squares.c/squares.h  - Cube rendering with 3D positioning and perspective
 gameloop.c/gameloop.h - SDL3 initialization and main game loop
 libs.h               - Centralized header dependencies
 main.c               - Entry point
@@ -56,19 +56,21 @@ main.c               - Entry point
 
 ### Rendering (squares.c/squares.h)
 
-**Square Type:**
+**Cube Type:**
 ```c
-typedef struct{
-    vec4_t pos;        // Position: {x, y, z, focal_length}
-    double length;     // Width of square
-    double width;      // Height of square
-} square_t;
+typedef struct {
+    vec4_t pos;              // World position
+    vec4_t local_verts[8];   // Vertices relative to center
+    vec4_t world_verts[8];   // Transformed world coordinates
+    eulerangles_t angles;    // Rotation angles (x, y, z in radians)
+} cube_t;
 ```
 
 **Functions:**
-- `render_square()` - Project 3D position to 2D and draw
-- `update_square()` - Update position based on keyboard input
-- `add_velocity()` - Apply vector velocity to position
+- `create_cube()` - Allocate and initialize cube with dimensions
+- `render_cube()` - Apply rotation matrices, project vertices, draw wireframe
+- `update_cube()` - Update rotation angles based on keyboard input
+- `initialize_cube_position()` - Set local vertex coordinates
 
 ### Game Loop (gameloop.c/gameloop.h)
 
@@ -87,8 +89,12 @@ Requirements:
 
 ## Controls
 
-- **Arrow Keys** - Move square in X/Y plane
-- **W/S** - Move square closer (W) or farther (S) on Z axis
+- **Arrow Keys UP/DOWN** - Rotate cube around X axis
+- **Arrow Keys LEFT/RIGHT** - Rotate cube around Y axis
+- **W** - Move cube backward on Z axis
+- **S** - Move cube forward on Z axis
+- **A** - Move cube left on X axis
+- **D** - Move cube right on X axis
 - **Close Window** - Exit application
 
 ## Design Patterns
@@ -134,12 +140,12 @@ The focal length (w component) scales the projection; larger values zoom out, sm
 
 ## Future Extensions
 
-- [ ] 3D cube rendering with 6 square faces
-- [ ] More complex geometric primitives
-- [ ] Affine transformations (translation, scaling)
+- [ ] Advanced 3D primitives (pyramids, spheres)
+- [ ] Affine transformations (translation, uniform scaling)
 - [ ] Depth sorting for proper face culling
-- [ ] Lighting and shading
+- [ ] Lighting and shading models
 - [ ] Texture mapping
+- [ ] SIMD optimizations for matrix operations
 
 ## License
 
