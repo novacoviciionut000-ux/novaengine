@@ -6,12 +6,15 @@
 #include "entities.h"
 #include <stdbool.h>
 
-typedef struct{
-    bool up, down, left, right, forward, backward;
+// Forward declaration pointing to the tagged struct
+typedef struct camera_t camera_t;
 
-}input_state_t;
-void get_velocity_from_input(const input_state_t *input, entity_t *ent, long deltaTime);
-void handle_event_and_delta(long deltaTime, long *lastTime, bool *running,entity_t **entities, int entity_count);
+typedef struct {
+    bool up, down, left, right, forward, backward;
+} input_state_t;
+
+vec4_t get_velocity_from_input(const input_state_t *input, camera_t *cam);
+void handle_event_and_delta(long deltaTime, long *lastTime, bool *running, entity_t **entities, int entity_count, camera_t *cam);
 input_state_t get_input(const uint8_t *keyboard_state);
 
-#endif 
+#endif

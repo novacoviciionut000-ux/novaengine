@@ -19,6 +19,8 @@ bool initializeGame(SDL_Window** window, SDL_Renderer** renderer) {
         printf("Could not create renderer: %s\n", SDL_GetError());
         return false;
     }
+    SDL_SetWindowRelativeMouseMode(*window, true);
+    SDL_HideCursor();
     return true;
 }
 void cleanUp(SDL_Window* window, SDL_Renderer* renderer) {
@@ -30,7 +32,7 @@ void cleanUp(SDL_Window* window, SDL_Renderer* renderer) {
 
 void gameLoop(){
     size_t entity_count = 0;
-
+    camera_t *cam = NULL;
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     entity_t **entities = NULL;
@@ -63,10 +65,15 @@ void gameLoop(){
         goto CLEANUP;
     }
     entities[entity_count++] = myCube;
+    cam = create_camera((vec4_t){{{.x=0, .y=0, .z=0, .w=FOCAL}}}, (eulerangles_t){.x=0, .y=0, .z=0}, 0.01f, 0.01f);
+    if(!cam){
+        printf("Failed to create camera\n");
+        goto CLEANUP;
+    }
     const long deltaTime = 5;
     long lastTime = SDL_GetTicks();
     while(running){
-        handle_event_and_delta(deltaTime, &lastTime, &running,entities, entity_count);
+        handle_event_and_delta(deltaTime, &lastTime, &running,entities, entity_count, cam);
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -85,6 +92,8 @@ void gameLoop(){
     }
     if(entities)
         free(entities);
+    if(cam)
+        free(cam);
     cleanUp(window, renderer);
 
 

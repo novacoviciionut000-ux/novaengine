@@ -3,6 +3,7 @@
 #include "entities.h"
 #include <stdio.h>
 #include "projection_math.h"
+#include "camera.h"
 #include "handle_input.h"
 bool initializeGame(SDL_Window** window, SDL_Renderer** renderer);
 void gameLoop();
