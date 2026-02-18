@@ -1,6 +1,7 @@
 #include "gameloop.h"
-#include "squares.h"
 
+
+#define EXPECTED_ENTITY_COUNT 15
 bool initializeGame(SDL_Window** window, SDL_Renderer** renderer) {
 
     if(!SDL_Init(SDL_INIT_VIDEO)) {
@@ -25,49 +26,51 @@ void cleanUp(SDL_Window* window, SDL_Renderer* renderer) {
     if(window)SDL_DestroyWindow(window);
     SDL_Quit();
 }
-square_t create_square(vec4_t pos, real length, real width) {
-    square_t sq;
-    sq.pos = pos;
-    sq.length = length;
-    sq.width = width;
-    return sq;
-}
-void handle_event_and_delta(long deltaTime, long *lastTime, bool *running, cube_t *myCube){
-    SDL_Event event;
-    while(SDL_PollEvent(&event)){
-        if(event.type == SDL_EVENT_QUIT){
-            *running = false;
-        }
-    }
-    const uint8_t *keyboard_state = (uint8_t*)SDL_GetKeyboardState(NULL);
-    long currentTime = SDL_GetTicks();
-    if(currentTime - *lastTime >= deltaTime) {
-        *lastTime = currentTime;
-        update_cube(myCube, keyboard_state);
-    }
-}
+
+
 void gameLoop(){
+    size_t entity_count = 0;
+
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
+    entity_t **entities = NULL;
     if(!initializeGame(&window, &renderer)) {
         printf("Failed to initialize game\n");
         goto CLEANUP;
     }
     bool running = true;
-    cube_t* myCube = create_cube((vec4_t){.x=0, .y=0, .z=400, .w=0}, 300.0, 300.0, 300.0);
-    if(!myCube){
+    size_t allocated_entities = EXPECTED_ENTITY_COUNT;
+    entities = calloc(allocated_entities , sizeof(entity_t*));
+    if(entities == NULL){
+        printf("Failed to allocate memory for entities\n");
+        goto CLEANUP;
+    }
+    entity_t* myCube = create_diamond_entity((vec4_t){.x=0, .y=0, .z=5, .w=FOCAL}, 1);
+    entity_t* myCube2 = create_cube_entity((vec4_t){.x=2, .y=0, .z=5, .w=FOCAL}, 1,1,1);
+    entity_t *myCar = create_car_entity((vec4_t){.x=-2, .y=0, .z=5, .w=FOCAL}, 1);
+    if(!myCar){
+        printf("Failed to create car\n");
+        goto CLEANUP;
+    }
+    entities[entity_count++] = myCar;
+    if(!myCube2){
         printf("Failed to create cube\n");
         goto CLEANUP;
     }
+    entities[entity_count++] = myCube2;
+    if(!myCube){
+        printf("Failed to create diamond\n");
+        goto CLEANUP;
+    }
+    entities[entity_count++] = myCube;
     const long deltaTime = 5;
     long lastTime = SDL_GetTicks();
     while(running){
-        handle_event_and_delta(deltaTime, &lastTime, &running, myCube);
+        handle_event_and_delta(deltaTime, &lastTime, &running,entities, entity_count);
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        render_cube(myCube, renderer);
-
+        render_entities(entities, renderer, entity_count);
 
         // Game rendering logic goes here
         SDL_RenderPresent(renderer);
@@ -75,9 +78,13 @@ void gameLoop(){
 
     }
     CLEANUP:
-    if(myCube){
-        free(myCube);
+    for(size_t i = 0; i < entity_count; i++){
+        if(entities[i]) {
+            free_entity(entities[i]);
+        }
     }
+    if(entities)
+        free(entities);
     cleanUp(window, renderer);
 
 
