@@ -1,16 +1,18 @@
 #ifndef SQUARES_H
 #define SQUARES_H
-#include "libs.h"
+#include <SDL3/SDL.h>
 #include "alg.h"
-#define FOCAL 100 // this is the focal length, it is used for perspective projection
-#define vel 1
+#include <math.h>
+#include <stdbool.h>
+#include "defines.h"
+#include <stdlib.h>
 typedef struct{
     vec4_t pos;
-    double length, width;
+    real length, width;
 }square_t;
 typedef struct{
 
-    double x,y,z;//these are stored in radians and represent the rotation around the x, y and z axes respectively, in that order, following the convention of Euler angles (yaw, pitch, roll)
+    real x,y,z;//these are stored in radians and represent the rotation around the x, y and z axes respectively, in that order, following the convention of Euler angles (yaw, pitch, roll)
 
 
 }eulerangles_t;
@@ -34,7 +36,7 @@ void update_square(square_t *sq, const Uint8 *keyboard_state);
 void render_square(const square_t *sq, SDL_Renderer *renderer);
 void render_cube(const cube_t *cube, SDL_Renderer *renderer);
 void update_cube(cube_t *cube, const Uint8 *keyboard_state);
-cube_t* create_cube(vec4_t pos, double length, double width, double height);
+cube_t* create_cube(vec4_t pos, real length, real width, real height);
 void add_velocity(square_t *sq, vec4_t velocity);
 #endif
 

@@ -130,7 +130,7 @@ screen_x = (world_x / world_z) * focal_length
 screen_y = (world_y / world_z) * focal_length
 ```
 
-The focal length (w component) scales the projection; larger values zoom out, smaller values zoom in.
+The focal length (w component) scales the projection; larger values zoom out, smaller values zoom in. ! TO DO: Tweak the focal length, it causes distortion.
 
 ## Performance Notes
 

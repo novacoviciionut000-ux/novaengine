@@ -25,7 +25,7 @@ void cleanUp(SDL_Window* window, SDL_Renderer* renderer) {
     if(window)SDL_DestroyWindow(window);
     SDL_Quit();
 }
-square_t create_square(vec4_t pos, double length, double width) {
+square_t create_square(vec4_t pos, real length, real width) {
     square_t sq;
     sq.pos = pos;
     sq.length = length;

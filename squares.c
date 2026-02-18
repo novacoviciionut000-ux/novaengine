@@ -31,8 +31,8 @@ void update_square(square_t *sq, const Uint8 *keyboard_state) {
 }
 void render_square(const square_t *sq, SDL_Renderer *renderer) {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    double x_pos = (sq->pos.x / sq->pos.z)*sq->pos.w;
-    double y_pos = (sq->pos.y / sq->pos.z)*sq->pos.w;
+    real x_pos = (sq->pos.x / sq->pos.z)*sq->pos.w;
+    real y_pos = (sq->pos.y / sq->pos.z)*sq->pos.w;
     
     SDL_FRect rect = {x_pos , y_pos, (sq->length/sq->pos.z)*sq->pos.w, (sq->width/sq->pos.z)*sq->pos.w};
     SDL_RenderFillRect(renderer, &rect);
@@ -108,10 +108,10 @@ void update_cube(cube_t *cube, const Uint8 *keyboard_state){
         cube -> pos.x += vel;
     }
 }
-void initialize_cube_position(cube_t** cube, vec4_t pos, double length, double width, double height){
-    double half_length = length / 2.0;
-    double half_width = width / 2.0;
-    double half_height = height / 2.0;
+void initialize_cube_position(cube_t** cube, vec4_t pos, real length, real width, real height){
+    real half_length = length / 2.0;
+    real half_width = width / 2.0;
+    real half_height = height / 2.0;
     (*cube)->pos = pos;
     //world vertices are the actual positions of the vertices in the world, they will be transformed by the rotation and translation to get the final positions for rendering, local vertices are the positions of the vertices relative to the center of the cube, they are used as a template for the transformations
     //bottom face
@@ -135,12 +135,11 @@ void initialize_cube_position(cube_t** cube, vec4_t pos, double length, double w
     (*cube)->local_verts[7] = (vec4_t){.x=-half_length, .y=half_width, .z=-half_height, .w=FOCAL}; //back left
 
 }
-cube_t* create_cube(vec4_t pos, double length, double width, double height){
+cube_t* create_cube(vec4_t pos, real length, real width, real height){
     
     //we will create the cube centered around the position given, so we need to calculate the vertices based on that
     cube_t *cube = malloc(sizeof(cube_t));
     if(cube == NULL){
-        printf("Failed to allocate memory for cube\n");
         return NULL;
     }
     //the center is right in the middle (pos.x, pos.y, pos.z) is basically the arithmetic mean of the vertices, so we can calculate the vertices by adding/subtracting half of the length, width and height from the position

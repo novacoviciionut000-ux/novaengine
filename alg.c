@@ -48,11 +48,11 @@ mat3_t add_mat3(const mat3_t *matA, const mat3_t *matB){
 
 // --- OPERATII VECTORI ---
 
-double dotprod3(const vec3_t *vecA, const vec3_t *vecB){
+real dotprod3(const vec3_t *vecA, const vec3_t *vecB){
     return (vecA->x * vecB->x) + (vecA->y * vecB->y) + (vecA->z * vecB->z);
 }
 
-double dotprod4(const vec4_t *vecA, const vec4_t *vecB){
+real dotprod4(const vec4_t *vecA, const vec4_t *vecB){
     return (vecA->x * vecB->x) + (vecA->y * vecB->y) + (vecA->z * vecB->z) + (vecA->w * vecB->w);
 }
 
@@ -90,7 +90,7 @@ vec4_t add_vec4(const vec4_t *vecA, const vec4_t *vecB){
     return res;
 }
 
-vec3_t scale_vec3(vec3_t vec, double factor){
+vec3_t scale_vec3(vec3_t vec, real factor){
     vec3_t res = {0};
     res.x = vec.x * factor;
     res.y = vec.y * factor;
@@ -98,7 +98,7 @@ vec3_t scale_vec3(vec3_t vec, double factor){
     return res;
 }
 
-vec4_t scale_vec4(vec4_t vec, double factor){
+vec4_t scale_vec4(vec4_t vec, real factor){
     vec4_t res = {0};
     res.x = vec.x * factor;
     res.y = vec.y * factor;
@@ -143,18 +143,18 @@ void add_vec4_p(vec4_t *dest, const vec4_t *vecA, const vec4_t *vecB){
 
 // --- TRIGONOMETRIE SI TRANSFORMARI ---
 
-double mat_sin(double angle){
-    double initial_angle = angle;
-    double anglesquared = initial_angle * initial_angle;
-    double first_term = initial_angle * anglesquared;
-    double second_term = first_term * anglesquared;
-    double third_term = second_term * anglesquared;
-    double fourth_term = third_term * anglesquared;
-    double threefinv = 0.1666666666666666, fivefinv = 0.0083333333333333, sevenfinv = 0.0001984126984127, ninefinv = 0.0000027557319224;
+real mat_sin(real angle){
+    real initial_angle = angle;
+    real anglesquared = initial_angle * initial_angle;
+    real first_term = initial_angle * anglesquared;
+    real second_term = first_term * anglesquared;
+    real third_term = second_term * anglesquared;
+    real fourth_term = third_term * anglesquared;
+    real threefinv = 0.1666666666666666, fivefinv = 0.0083333333333333, sevenfinv = 0.0001984126984127, ninefinv = 0.0000027557319224;
     return initial_angle - (first_term * threefinv) + (second_term * fivefinv) - (third_term * sevenfinv) + (fourth_term * ninefinv);
 }
 //mat_sin foloseste seria lui Taylor pentru a calcula sinusul unui unghi dat in radiani. Aceasta metoda este eficienta pentru unghiuri mici, dar poate avea erori semnificative pentru unghiuri mari din cauza convergentei lente a seriei.
-double mat_cos(double angle){
+real mat_cos(real angle){
     return mat_sin(angle + M_PIdiv2);
 }
 
@@ -173,9 +173,20 @@ mat4_t mat4_identity(){
     return I;
 }
 //matricile de rotatie sunt construite pornind de la matricea identitate, apoi se modifică elementele corespunzătoare pentru a reprezenta rotația în jurul axei specificate. Funcțiile de rotație multiplică matricea de intrare cu matricea de rotație rezultată pentru a obține noua matrice transformata.
-mat4_t rot_z(const mat4_t *mat, double angle, bool precise){
+
+//we use the precise boolean as a flag to determine whether the caller needs accuracy or speed. If precise is false, we use our custom mat_sin and mat_cos functions,
+// which are faster but less accurate, especially for larger angles. If precise is true, we use the standard library's sin and cos functions, which are more accurate but slower.
+//Beware, the inaccuracy of mat_sin and mat_cos can lead to significant visual artifacts when rotating objects by large angles, especially 
+//if the angles are not normalized to the range of -2*PI to 2*PI, as the error accumulates with larger inputs. For small angles (e.g., less than 30 degrees), 
+//the approximation is generally good enough for most applications, 
+//but for angles approaching or exceeding 90 degrees, the error can become quite noticeable.
+//In general, for applications where performance is critical and the angles are small, using mat_sin and mat_cos with precise set to false can be a good choice. However, for applications that require high visual fidelity or involve large rotations, it's advisable to use the standard library functions by setting precise to true.
+//For ANYTHING that runs in the game loop indefinetely, please use the standard sin and cosin functions.Using the
+//Taylor series implementation WILL cause cumulative visual artifacts
+
+mat4_t rot_z(const mat4_t *mat, real angle, bool precise){
     mat4_t res = mat4_identity();
-    double sine = 0, cosine = 0;
+    real sine = 0, cosine = 0;
     if(!precise){
         cosine = mat_cos(angle);
         sine = mat_sin(angle);
@@ -190,9 +201,9 @@ mat4_t rot_z(const mat4_t *mat, double angle, bool precise){
     return mlt_mat4(mat, &res);
 }
 
-mat4_t rot_y(const mat4_t *mat, double angle, bool precise){
+mat4_t rot_y(const mat4_t *mat, real angle, bool precise){
     mat4_t res = mat4_identity();
-    double sine = 0, cosine = 0;
+    real sine = 0, cosine = 0;
     if(!precise){
         cosine = mat_cos(angle);
         sine = mat_sin(angle);
@@ -207,9 +218,9 @@ mat4_t rot_y(const mat4_t *mat, double angle, bool precise){
     return mlt_mat4(mat, &res);
 }
 
-mat4_t rot_x(const mat4_t *mat, double angle, bool precise){
+mat4_t rot_x(const mat4_t *mat, real angle, bool precise){
     mat4_t res = mat4_identity();
-    double sine = 0, cosine = 0;
+    real sine = 0, cosine = 0;
     if(!precise){
         cosine = mat_cos(angle);
         sine = mat_sin(angle);

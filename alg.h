@@ -1,35 +1,37 @@
 #ifndef ALG_H
 #define ALG_H
-#include "libs.h"
-
+#include <math.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include "defines.h"
 #define M_PIdiv2 1.56079632
 typedef struct{
   union{
-    struct{double x,y,z;};
-    double vals[3];
+    struct{real x,y,z;};
+    real vals[3];
     
   };
   
 }vec3_t;
 typedef struct{
   union{
-    struct{double x,y,z,w;};
-    double vals[4];
+    struct{real x,y,z,w;};
+    real vals[4];
     
   };
   
 }vec4_t;
 typedef struct{
   union{
-    double m[3][3];
-    double v[9];
+    real m[3][3];
+    real v[9];
   };
   
 }mat3_t;
 typedef struct{
    union{
-    double m[4][4];
-    double v[16];
+    real m[4][4];
+    real v[16];
   };
   
 }mat4_t;
@@ -40,8 +42,8 @@ mat3_t mlt_mat3(const mat3_t *matA, const mat3_t *matB);
 mat4_t add_mat4(const mat4_t *matA, const mat4_t *matB);
 mat3_t add_mat3(const mat3_t *matA, const mat3_t *matB);
 
-double dotprod3(const vec3_t *vecA, const vec3_t *vecB);
-double dotprod4(const vec4_t *vecA, const vec4_t *vecB);
+real dotprod3(const vec3_t *vecA, const vec3_t *vecB);
+real dotprod4(const vec4_t *vecA, const vec4_t *vecB);
 
 vec3_t crossprod3(const vec3_t *vecA, const vec3_t *vecB);//cross product only exists in 3D
 vec4_t crossprod4(const vec4_t *vecA, const vec4_t *vecB);//ignore the w-component
@@ -56,15 +58,15 @@ void crossprod3_p(vec3_t *dest, const vec3_t *vecA, const vec3_t *vecB);//cross 
 void crossprod4_p(vec4_t *dest, const vec4_t *vecA, const vec4_t *vecB);//ignore the w-component
 void add_vec3_p(vec3_t *dest, const vec3_t *vecA, const vec3_t *vecB);
 void add_vec4_p(vec4_t *dest, const vec4_t *vecA, const vec4_t *vecB);
-double mat_sin(double angle);
-double mat_cos(double angle);
+real mat_sin(real angle);
+real mat_cos(real angle);
 
-vec3_t scale_vec3(vec3_t vec, double factor);
-vec4_t scale_vec4(vec4_t vec, double factor);
+vec3_t scale_vec3(vec3_t vec, real factor);
+vec4_t scale_vec4(vec4_t vec, real factor);
 mat4_t mat4_identity();
-mat4_t rot_z(const mat4_t *mat, double angle, bool precise);
-mat4_t rot_y(const mat4_t *mat, double angle, bool precise);
-mat4_t rot_x(const mat4_t *mat, double angle, bool precise);
+mat4_t rot_z(const mat4_t *mat, real angle, bool precise);
+mat4_t rot_y(const mat4_t *mat, real angle, bool precise);
+mat4_t rot_x(const mat4_t *mat, real angle, bool precise);
 vec4_t apply_transform(const mat4_t *transform, const vec4_t *vec);
 
 #endif
