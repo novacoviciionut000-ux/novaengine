@@ -70,6 +70,8 @@ void gameLoop(){
         printf("Failed to create camera\n");
         goto CLEANUP;
     }
+    update_entities(entities, entity_count);
+    move_world_to_camera_space(cam, entities, entity_count);
     const long deltaTime = 5;
     const long debugTimer = 1000;
     long lastTime = SDL_GetTicks();

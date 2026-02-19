@@ -243,3 +243,9 @@ vec4_t apply_transform(const mat4_t *transform, const vec4_t *vec){
     res.w = (transform->m[3][0] * vec->x) + (transform->m[3][1] * vec->y) + (transform->m[3][2] * vec->z) + (transform->m[3][3] * vec->w);
     return res;
 }
+real get_distance(vec4_t *vecA, vec4_t *vecB){
+    real dist = sqrtf((vecA->x - vecB->x) * (vecA->x - vecB->x) + 
+    (vecA->y - vecB->y) * (vecA->y - vecB->y)+
+    (vecA->z - vecB->z) * (vecA->z - vecB->z));
+    return dist;
+}

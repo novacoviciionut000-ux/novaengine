@@ -36,7 +36,7 @@ typedef struct{
   
 }mat4_t;
 
-
+real get_distance(vec4_t *vecA, vec4_t *vecB);
 mat4_t mlt_mat4(const mat4_t *matA, const mat4_t *matB);
 mat3_t mlt_mat3(const mat3_t *matA, const mat3_t *matB);
 mat4_t add_mat4(const mat4_t *matA, const mat4_t *matB);
