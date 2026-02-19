@@ -1,7 +1,7 @@
 #ifndef DEF_H
 #define DEF_H
-#define SCREEN_WIDTH 1024
-#define SCREEN_HEIGHT 768
+#define SCREEN_WIDTH 1440
+#define SCREEN_HEIGHT 1080
 #define ANGULAR_VELOCITY 0.01f
 #define SENSITIVITY 0.1f
 #define FOCAL 400 // this is the focal length, it is used for perspective projection

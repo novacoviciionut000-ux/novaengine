@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "defines.h"
-#define M_PIdiv2 1.56079632
+#define M_PIdiv2 1.57079632
 typedef struct{
   union{
     struct{real x,y,z;};
