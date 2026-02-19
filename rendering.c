@@ -21,7 +21,7 @@ bool in_sight(const vec4_t *vert, camera_t *cam){
         .w = 0.0f
     };
     real dot_product = dotprod4(&dir_to_vert, &forward);
-    return dot_product > -2.0f ? true:false;//i added a buffer to prevent clipping
+    return dot_product > -100000.0f ? true:false;//i added a buffer to prevent clipping
 }
 bool painters_algorithm(entity_t *entity){
     //we sort the triangles of the entity by their average depth, and then we render them in order from farthest to closest, this is a very simple implementation of the painter's algorithm, it is not very efficient but it works for our purposes, since we are only rendering a few entities with a few triangles each, it should be fine for now, but if we want to render more complex scenes with more entities and more triangles, we will need to implement a more efficient sorting algorithm, such as quicksort or mergesort, or we can use a spatial data structure such as a BSP tree or a octree to sort the triangles more efficiently
@@ -65,7 +65,10 @@ bool fill_entity(entity_t *entity, SDL_Renderer *renderer,camera_t *cam){
         vec4_t vert0 = entity->mesh->world_verts[idx0];
         vec4_t vert1 = entity->mesh->world_verts[idx1];
         vec4_t vert2 = entity->mesh->world_verts[idx2];
-        if(!in_sight(&vert0, cam) || !in_sight(&vert1, cam) || !in_sight(&vert2, cam)){
+        if(!in_sight(&vert0, cam) && !in_sight(&vert1, cam) && !in_sight(&vert2, cam)){
+            continue;
+        }
+        if(vert0.z <= 0.05 || vert1.z <= 0.05 || vert2.z <= 0.05){
             continue;
         }
         SDL_FPoint p0 = vec4_to_screen_fpoint(&vert0);
@@ -85,9 +88,7 @@ bool fill_entity(entity_t *entity, SDL_Renderer *renderer,camera_t *cam){
     }
     return true;
 }
-bool render_entity(entity_t *entity, SDL_Renderer *renderer,camera_t* cam){
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
+bool wireframerender(entity_t *entity, SDL_Renderer *renderer,camera_t* cam){
     for(int i = 0; i < entity->mesh->indice_count; i += 2){
         int index1 = entity->mesh->indice_map[i];
         int index2 = entity->mesh->indice_map[i+1];
@@ -98,9 +99,21 @@ bool render_entity(entity_t *entity, SDL_Renderer *renderer,camera_t* cam){
         if(!in_sight(&vert1, cam) && !in_sight(&vert2, cam)){
             continue;
         }
+        if(vert1.z <= 0.05 || vert2.z <= 0.05){
+            continue;
+        }
         SDL_Point point1 = vec4_to_screen_point(&vert1);
         SDL_Point point2 = vec4_to_screen_point(&vert2);
         SDL_RenderLine(renderer, point1.x, point1.y, point2.x, point2.y);
+    }
+    return true;
+}
+bool render_entity(entity_t *entity, SDL_Renderer *renderer,camera_t* cam){
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    if(entity->mesh->indice_map != NULL){
+        if(!wireframerender(entity, renderer, cam)){
+            return false;
+        }
     }
     if(entity->mesh->triangle_map != NULL){// if the triangle map is NULL, we do not render it (nullable because we may want a wireframe entity)
         if(!fill_entity(entity,renderer, cam)){

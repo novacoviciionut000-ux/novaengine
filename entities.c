@@ -12,8 +12,6 @@ void rotate_entity(entity_t *entity){
         // B. Translate (Add Position)
         vec4_t world_pos = add_vec4(&rotated, &entity->pos);
 
-        // C. Project (3D -> 2D)
-        if(world_pos.z <= 0.1) world_pos.z = 0.1; 
 
         entity->mesh->world_verts[i] = world_pos;
     }
@@ -43,6 +41,7 @@ void free_entity(entity_t *entity){
     free(entity->mesh->world_verts);
     free(entity->mesh->indice_map);
     free(entity->mesh->triangle_map);    
+    free(entity->mesh->camera_verts);
     free(entity->mesh);
     free(entity);
 }
@@ -96,6 +95,16 @@ mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int num_indices, int* in
     mesh_t *mesh = malloc(sizeof(mesh_t));
     mesh->local_verts = local_verts;
     mesh->world_verts = malloc(num_verts * sizeof(vec4_t));
+    if(mesh->world_verts == NULL){
+        free(mesh);
+        return NULL;
+    }
+    mesh -> camera_verts = malloc(num_verts * sizeof(vec4_t));
+    if(mesh->camera_verts == NULL){
+        free(mesh->world_verts);
+        free(mesh);
+        return NULL;
+    }
     mesh->vertex_count = num_verts;
     mesh -> triangle_map = NULL;
     mesh -> triangle_count = 0;

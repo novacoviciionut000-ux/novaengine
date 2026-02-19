@@ -9,6 +9,7 @@
 typedef struct{
     vec4_t *local_verts;
     vec4_t *world_verts;
+    vec4_t *camera_verts;//this was added because we were modifying world_verts each frame. Now we have verts for the original position(0,0,0), the physical world and for the screen-space
     int vertex_count;//obviously, since both of them are dynamically allocated, we need to know how many vertices there are
     int* triangle_map;//this is an array of integers that defines which vertices form which triangles, it is basically a list of triplets of vertex indices, for example if we have a cube with 8 vertices, and we want to form a triangle with vertices 0, 1 and 2, we would have a triangle map of {0,1,2} and so on for all the triangles of the cube
     //this is also NULLABLE
