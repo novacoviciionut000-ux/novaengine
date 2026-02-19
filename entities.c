@@ -43,8 +43,10 @@ void free_entity(entity_t *entity){
     free(entity->mesh->indice_map);
     free(entity->mesh->triangle_map);    
     free(entity->mesh->camera_verts);
-    free(entity->triangles);
-    free(entity->vertices);
+    if(entity->triangles)
+        free(entity->triangles);
+    if(entity->vertices)
+        free(entity->vertices);
     free(entity->mesh);
     free(entity);
 }
@@ -95,14 +97,14 @@ int* create_cube_indice_map(){
 }
 
 mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int num_indices, int* indice_map, int triangle_count, int* triangle_map){
-    mesh_t *mesh = malloc(sizeof(mesh_t));
+    mesh_t *mesh = calloc(1,sizeof(mesh_t));
     mesh->local_verts = local_verts;
-    mesh->world_verts = malloc(num_verts * sizeof(vec4_t));
+    mesh->world_verts = calloc(num_verts , sizeof(vec4_t));
     if(mesh->world_verts == NULL){
         free(mesh);
         return NULL;
     }
-    mesh -> camera_verts = malloc(num_verts * sizeof(vec4_t));
+    mesh -> camera_verts = calloc(num_verts , sizeof(vec4_t));
     if(mesh->camera_verts == NULL){
         free(mesh->world_verts);
         free(mesh);
@@ -120,7 +122,8 @@ mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int num_indices, int* in
     return mesh;
 }
 entity_t* create_entity(vec4_t pos, mesh_t *mesh, bool movable){
-    entity_t *entity = malloc(sizeof(entity_t));
+    entity_t *entity = calloc(1,sizeof(entity_t));
+    entity->color = (SDL_FColor){1.0f, 1.0f, 1.0f, 1.0f}; // Default to solid white
     entity->pos = pos;
     entity->velocity = (vec4_t){{{0,0,0,0}}};
     entity->angular_velocity = (vec4_t){{{0,0,0,0}}};
@@ -129,9 +132,9 @@ entity_t* create_entity(vec4_t pos, mesh_t *mesh, bool movable){
     entity->speed = 0.01f;
     entity->angular_speed = 0.01f;
     entity->angles = (eulerangles_t){0,0,0};
-    SDL_Vertex* verts = mesh->triangle_count != 0?malloc(entity->mesh->triangle_count * 3 * sizeof(SDL_Vertex)):NULL;
+    SDL_Vertex* verts = mesh->triangle_count != 0?calloc(entity->mesh->triangle_count * 3 , sizeof(SDL_Vertex)):NULL;
     entity -> vertices = verts;
-    triangle_t* triangles = mesh->triangle_count!=0?malloc(entity->mesh->triangle_count * sizeof(triangle_t)):NULL;
+    triangle_t* triangles = mesh->triangle_count!=0?calloc(entity->mesh->triangle_count , sizeof(triangle_t)):NULL;
     entity->triangles = triangles;
     return entity;
 }

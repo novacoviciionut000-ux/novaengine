@@ -19,7 +19,7 @@ void handle_camera_rotation(camera_t *cam, const SDL_Event *event);
 void move_world_to_camera_space(const camera_t *cam, entity_t **entities, int entity_count);
 void handle_camera_translation(camera_t *cam, const uint8_t *keyboard_state);
 camera_t* create_camera(vec4_t pos, eulerangles_t angles, real speed, real angular_speed);
-real get_distance_to_closest_vertex(entity_t **entities, int num_entities,camera_t *cam);
+real get_distance_to_closest_vertex(entity_t **entities, int num_entities);// this will need to be changed into two functions, one that calculated for x axis, and z-axis respectively.
 void update_grounded(camera_t *cam, entity_t **entities, int numentities);
 
 #endif

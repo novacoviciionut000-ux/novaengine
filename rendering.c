@@ -85,6 +85,7 @@ bool fill_entity(entity_t *entity, SDL_Renderer *renderer,camera_t *cam){
         entity->vertices[curr_vertex++] = v3;
  
     }
+    if(curr_vertex == 0)return true;
     if(!SDL_RenderGeometry(renderer, NULL, entity->vertices, curr_vertex, NULL, 0)){
         return false;
 

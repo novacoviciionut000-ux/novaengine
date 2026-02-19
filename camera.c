@@ -2,7 +2,7 @@
 #include "camera.h"
 //kind of a "constructor" thingy
 camera_t* create_camera(vec4_t pos, eulerangles_t angles, real speed, real angular_speed){
-    camera_t* cam = malloc(sizeof(camera_t));
+    camera_t* cam = calloc(1,sizeof(camera_t));
     if(!cam){
         return NULL;
     }
@@ -15,19 +15,16 @@ camera_t* create_camera(vec4_t pos, eulerangles_t angles, real speed, real angul
 }
 void handle_camera_rotation(camera_t *cam, const SDL_Event *event){
     if(event->type == SDL_EVENT_MOUSE_MOTION){
-        printf("Yaw before: %f\n", cam->angles.y);
         cam->angles.y += event->motion.xrel * SENSITIVITY;
         cam -> angles.x += event->motion.yrel * SENSITIVITY;
-        //cam->angles.x += event->motion.yrel * SENSITIVITY;
         // Clamp the pitch to prevent flipping
         cam->angles.x = cam->angles.x>M_PIdiv2?M_PIdiv2:cam->angles.x;
         cam->angles.x = cam->angles.x<-M_PIdiv2?-M_PIdiv2:cam->angles.x;
 
-        printf("Yaw after: %f\n", cam->angles.y);
     }
 }
 
-real get_distance_to_closest_vertex(entity_t **entities, int num_entities,camera_t *cam){// this will need to be changed into two functions, one that calculated for x axis, and z-axis respectively.
+real get_distance_to_closest_vertex(entity_t **entities, int num_entities){// this will need to be changed into two functions, one that calculated for x axis, and z-axis respectively.
     //we use the pythagorean theorem on each vertex
     real min = 100;
     vec4_t origin = {{{0,0,0,0}}};
@@ -39,10 +36,9 @@ real get_distance_to_closest_vertex(entity_t **entities, int num_entities,camera
     }
     return min;
 }
-void update_grounded(camera_t *cam, entity_t **entities, int numentities){
+void update_grounded(camera_t* cam, entity_t **entities, int numentities){//This had a camera parameter before, but it doesn't need it because the camera is always technically at {0,0,0} in the camera space.
     cam -> grounded = 0;
-    real dist = get_distance_to_closest_vertex(entities, numentities, cam);
-    printf("Distance: %f\n", dist);
+    real dist = get_distance_to_closest_vertex(entities, numentities);
     if(dist <= 0.05f){
         cam -> grounded |= 0x3;
     }else{
@@ -61,7 +57,6 @@ void move_world_to_camera_space(const camera_t *cam, entity_t **entities, int en
     rotation = rot_x(&rotation, cam->angles.x, true);
     rotation = rot_y(&rotation, -cam->angles.y, true);
     //rotation = rot_x(&rotation, -cam->angles.x, true);
-    printf("camera_vert[0]: %f %f %f\n", entities[0]->mesh->camera_verts[0].x, entities[0]->mesh->camera_verts[0].y, entities[0]->mesh->camera_verts[0].z);
 
     for(int i = 0; i < entity_count;i++){
         for(int j = 0; j < entities[i]->mesh->vertex_count; j++){

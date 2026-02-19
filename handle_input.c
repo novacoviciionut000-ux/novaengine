@@ -53,7 +53,6 @@ void handle_event_and_delta(long deltaTime, long *lastTime, bool *running,entity
         }
         if(event.type == SDL_EVENT_MOUSE_MOTION){
 
-            printf("Rotating\n");
             // Handle camera rotation here, we will need to pass the camera to this function, or we can just make the camera a global variable, which is not ideal but it is the easiest solution for now
              handle_camera_rotation(cam, &event);
             
@@ -67,7 +66,6 @@ void handle_event_and_delta(long deltaTime, long *lastTime, bool *running,entity
     input_state_t input = get_input(keyboard_state);
 
     if(currentTime - *lastTime >= deltaTime) {
-        printf("Delta tick\n");
         *lastTime = currentTime;    
         update_entities(entities, entity_count);//this is fragile.Basically, move_world_to_camera_space "temporarily" corrupts the world state for the render to show.
         //Then, after the render is done, the world state is restored to its original state, which is a bit hacky but it works for now, and it allows us to avoid having to create a separate set of vertices for the camera space, which would be more memory intensive and more complex to manage, but if we want to optimize this in the future, we can definitely do that by creating a separate set of vertices for the camera space and then we can just copy the world vertices to the camera vertices and then apply the 
