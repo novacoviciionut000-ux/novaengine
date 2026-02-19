@@ -1,26 +1,5 @@
 #include "entities.h"
-void render_entity(entity_t *entity, SDL_Renderer *renderer){
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-    for(int i = 0; i < entity->mesh->indice_count; i += 2){
-        int index1 = entity->mesh->indice_map[i];
-        int index2 = entity->mesh->indice_map[i+1];
-        vec4_t vert1 = entity->mesh->world_verts[index1];
-        vec4_t vert2 = entity->mesh->world_verts[index2];
-        if(vert1.z <= 0.1) vert1.z = 0.1;
-        if(vert2.z <= 0.1) vert2.z = 0.1;
-        SDL_Point point1 = vec4_to_screen_point(&vert1);
-        SDL_Point point2 = vec4_to_screen_point(&vert2);
-        SDL_RenderLine(renderer, point1.x, point1.y, point2.x, point2.y);
-    }
-
-}
-void render_entities(entity_t **entity, SDL_Renderer *renderer, int entity_count){
-    for(int i = 0; i < entity_count; i++){
-        if(entity[i]->pos.z > 0.0f)
-        render_entity(entity[i], renderer);
-    }
-}
 void rotate_entity(entity_t *entity){
     mat4_t id = mat4_identity();
     mat4_t m_rot_z = rot_z(&id, entity->angles.z, true);
@@ -59,11 +38,28 @@ void update_entities(entity_t **entities, int entity_count){
 }
 
 void free_entity(entity_t *entity){
+
     free(entity->mesh->local_verts);
     free(entity->mesh->world_verts);
     free(entity->mesh->indice_map);
+    free(entity->mesh->triangle_map);    
     free(entity->mesh);
     free(entity);
+}
+int* create_cube_triangles(){
+    int* triangle_map = malloc(36 * sizeof(int));
+    int cube_triangle_map[] = {
+        0,1,2, 0,2,3, //bottom face
+        4,5,6, 4,6,7, //top face
+        0,1,5, 0,5,4, //front face
+        1,2,6, 1,6,5, //right face
+        2,3,7, 2,7,6, //back face
+        3,0,4, 3,4,7 //left face
+    };
+    for(int i = 0; i < 36; i++){
+        triangle_map[i] = cube_triangle_map[i];
+    }
+    return triangle_map;
 }
 vec4_t* create_cube_local_vertices(real length, real width, real height){
     vec4_t* local_verts = malloc(8 * sizeof(vec4_t));
@@ -101,6 +97,8 @@ mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int num_indices, int* in
     mesh->local_verts = local_verts;
     mesh->world_verts = malloc(num_verts * sizeof(vec4_t));
     mesh->vertex_count = num_verts;
+    mesh -> triangle_map = NULL;
+    mesh -> triangle_count = 0;
     mesh -> indice_map = indice_map;
     mesh->indice_count = num_indices;
     return mesh;
@@ -120,7 +118,17 @@ entity_t* create_entity(vec4_t pos, mesh_t *mesh, bool movable){
 entity_t* create_cube_entity(vec4_t pos, real length, real width, real height){
     vec4_t* local_verts = create_cube_local_vertices(length, width, height);
     int* indice_map = create_cube_indice_map();
+    int* triangle_map = create_cube_triangles();
+
+    if(indice_map == NULL || local_verts == NULL || triangle_map == NULL){
+        if(indice_map)free(indice_map);
+        if(local_verts)free(local_verts);
+        if(triangle_map)free(triangle_map);
+        return NULL;
+    }  
     mesh_t* cube_mesh = create_mesh(local_verts, 8, 24, indice_map);
+    cube_mesh->triangle_map = triangle_map;
+    cube_mesh->triangle_count = 12;
     entity_t* cube_entity = create_entity(pos, cube_mesh, true);
     return cube_entity;
 }
@@ -182,3 +190,4 @@ entity_t* create_car_entity(vec4_t pos, real scale) {
     mesh_t* mesh = create_mesh(local_verts, num_verts, num_indices, indices);
     return create_entity(pos, mesh, true);
 }
+//To do: OBJ loader / parser, so that we can easily add new entities without hardcoding their vertices and indices in the code, we can just create a .obj file for the entity and load it at runtime, this will also allow us to use more complex models without having to manually define all the vertices and indices in the code, which is very error-prone and time-consuming, especially for complex models with hundreds or thousands of vertices and indices

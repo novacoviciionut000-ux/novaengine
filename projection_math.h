@@ -5,5 +5,5 @@
 #include "defines.h"
 
 SDL_Point vec4_to_screen_point(const vec4_t *vec);
-
+SDL_FPoint vec4_to_screen_fpoint(const vec4_t *vec);
 #endif

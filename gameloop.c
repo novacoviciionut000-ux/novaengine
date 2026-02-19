@@ -78,7 +78,10 @@ void gameLoop(){
         
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        render_entities(entities, renderer, entity_count);
+        if(!render_entities(entities, renderer, entity_count, cam)){
+            printf("Failed to render entities\n");
+            goto CLEANUP;
+        }
         if(SDL_GetTicks() % debugTimer == 0){
             printf("Camera position: x: %f, y: %f, z: %f\n", cam->pos.x, cam->pos.y, cam->pos.z);
         }
