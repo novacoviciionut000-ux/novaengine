@@ -7,6 +7,11 @@
 #include "alg.h"
 #include <stdlib.h>
 typedef struct{
+    int idx0, idx1, idx2;
+    real avg_depth;
+
+}triangle_t;
+typedef struct{
     vec4_t *local_verts;
     vec4_t *world_verts;
     vec4_t *camera_verts;//this was added because we were modifying world_verts each frame. Now we have verts for the original position(0,0,0), the physical world and for the screen-space
@@ -30,20 +35,24 @@ typedef struct{
     vec4_t angular_velocity;
     bool movable;
     mesh_t *mesh;
+    triangle_t *triangles;
+    SDL_Vertex *vertices;//this is used for entity rendering
     real speed;//highly useful for changing the speed of the entity without changing the velocity vector, which is useful for things like acceleration and deceleration, as well as for things like power-ups that can change the speed of the entity temporarily
     real angular_speed;
     eulerangles_t angles; //the rotation of the entity around the x, y and
     SDL_FColor color; //the color of the entity, this is used for rendering, it is a simple RGB color with an alpha channel, it is not used for anything else, it is just a way to give the entity a color for rendering purposes, it does not affect the physics or anything else, it is just a visual thing
 
 }entity_t;
+
 vec4_t* create_cube_local_vertices(real length, real width, real height);
 int* create_cube_indice_map();
-mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int num_indices, int* indice_map);
+mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int num_indices, int* indice_map, int triangle_count, int* triangle_map);
 entity_t* create_entity(vec4_t pos, mesh_t *mesh, bool movable);
 entity_t* create_cube_entity(vec4_t pos, real length, real width, real height);
 entity_t* create_diamond_entity(vec4_t pos, real size);
 void rotate_entity(entity_t *entity);
 void free_entity(entity_t *entity);
+SDL_Vertex* vec4tovertex(entity_t *entity);
 int* create_cube_triangles();
 void update_entity(entity_t *entity);
 void update_entities(entity_t **entities, int entity_count);
