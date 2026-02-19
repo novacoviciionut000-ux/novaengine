@@ -17,6 +17,7 @@ void handle_camera_rotation(camera_t *cam, const SDL_Event *event){
     if(event->type == SDL_EVENT_MOUSE_MOTION){
         printf("Yaw before: %f\n", cam->angles.y);
         cam->angles.y += event->motion.xrel * SENSITIVITY;
+        cam -> angles.x += event->motion.yrel * SENSITIVITY;
         //cam->angles.x += event->motion.yrel * SENSITIVITY;
         // Clamp the pitch to prevent flipping
         if (cam->angles.x > M_PIdiv2) {
@@ -60,6 +61,7 @@ void handle_camera_translation(camera_t *cam, const uint8_t *keyboard_state){
 }
 void move_world_to_camera_space(const camera_t *cam, entity_t **entities, int entity_count){
     mat4_t rotation = mat4_identity();
+    rotation = rot_x(&rotation, cam->angles.x, true);
     rotation = rot_y(&rotation, -cam->angles.y, true);
     //rotation = rot_x(&rotation, -cam->angles.x, true);
     printf("camera_vert[0]: %f %f %f\n", entities[0]->mesh->camera_verts[0].x, entities[0]->mesh->camera_verts[0].y, entities[0]->mesh->camera_verts[0].z);
