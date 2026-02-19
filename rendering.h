@@ -6,9 +6,9 @@
 #include "alg.h"
 #include "camera.h"
 #include <stdlib.h>
-bool fill_entity(entity_t *entity, SDL_Renderer *renderer,camera_t *cam);
+bool fill_entity(entity_t *entity, SDL_Renderer *renderer);
 bool render_entities(entity_t **entity, SDL_Renderer *renderer, int entity_count,camera_t *cam);
-bool render_entity(entity_t *entity, SDL_Renderer *renderer,camera_t *cam);
+bool render_entity(entity_t *entity, SDL_Renderer *renderer);
 vec4_t get_forward(camera_t *cam);
 
 

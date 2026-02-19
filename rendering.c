@@ -56,7 +56,7 @@ SDL_Vertex vec4tovert(entity_t *entity, vec4_t *vec){
     vert.position = vec4_to_screen_fpoint(vec);
     return vert;
 }
-bool fill_entity(entity_t *entity, SDL_Renderer *renderer,camera_t *cam){
+bool fill_entity(entity_t *entity, SDL_Renderer *renderer){
     if(!painters_algorithm(entity)){
         return false;
     }
@@ -68,15 +68,15 @@ bool fill_entity(entity_t *entity, SDL_Renderer *renderer,camera_t *cam){
         vec4_t vert0 = entity->mesh->camera_verts[idx0];
         vec4_t vert1 = entity->mesh->camera_verts[idx1];
         vec4_t vert2 = entity->mesh->camera_verts[idx2];
+        if(vert0.z <= 0.001f || vert1.z <= 0.001f || vert2.z <= 0.001f){
+            continue;
+        }
+
+
         SDL_Vertex v1 = vec4tovert(entity,&vert0);
         SDL_Vertex v2 = vec4tovert(entity,&vert1);
         SDL_Vertex v3 = vec4tovert(entity,&vert2);
-        if(!in_sight(&vert0, cam) && !in_sight(&vert1, cam) && !in_sight(&vert2, cam)){
-            continue;
-        }
-        if(vert0.z <= 0.05 || vert1.z <= 0.05 || vert2.z <= 0.05){
-            continue;
-        }
+
 
 
         
@@ -92,17 +92,13 @@ bool fill_entity(entity_t *entity, SDL_Renderer *renderer,camera_t *cam){
     }   
     return true;
 }
-bool wireframerender(entity_t *entity, SDL_Renderer *renderer,camera_t* cam){
+bool wireframerender(entity_t *entity, SDL_Renderer *renderer){
     for(int i = 0; i < entity->mesh->indice_count; i += 2){
         int index1 = entity->mesh->indice_map[i];
         int index2 = entity->mesh->indice_map[i+1];
         vec4_t vert1 = entity->mesh->camera_verts[index1];
         vec4_t vert2 = entity->mesh->camera_verts[index2];
-
-        if(!in_sight(&vert1, cam) && !in_sight(&vert2, cam)){
-            continue;
-        }
-        if(vert1.z <= 0.01f || vert2.z <= 0.01f){
+        if(vert1.z <= 0.001f || vert2.z <= 0.001f){
             continue;
         }
         SDL_Point point1 = vec4_to_screen_point(&vert1);
@@ -111,15 +107,15 @@ bool wireframerender(entity_t *entity, SDL_Renderer *renderer,camera_t* cam){
     }
     return true;
 }
-bool render_entity(entity_t *entity, SDL_Renderer *renderer,camera_t* cam){
+bool render_entity(entity_t *entity, SDL_Renderer *renderer){
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     if(entity->mesh->indice_map != NULL){
-        if(!wireframerender(entity, renderer, cam)){
+        if(!wireframerender(entity, renderer)){
             return false;
         }
     }
     if(entity->mesh->triangle_map != NULL){// if the triangle map is NULL, we do not render it (nullable because we may want a wireframe entity)
-        if(!fill_entity(entity,renderer, cam)){
+        if(!fill_entity(entity,renderer)){
             return false;
         }
     }
@@ -129,7 +125,7 @@ bool render_entity(entity_t *entity, SDL_Renderer *renderer,camera_t* cam){
 bool render_entities(entity_t **entity, SDL_Renderer *renderer, int entity_count,camera_t *cam){
     for(int i = 0; i < entity_count; i++){
         if(in_sight(&entity[i]->pos, cam)){
-            if(!render_entity(entity[i], renderer, cam)){
+            if(!render_entity(entity[i], renderer)){
                 return false;
             }
         }
