@@ -20,12 +20,9 @@ void handle_camera_rotation(camera_t *cam, const SDL_Event *event){
         cam -> angles.x += event->motion.yrel * SENSITIVITY;
         //cam->angles.x += event->motion.yrel * SENSITIVITY;
         // Clamp the pitch to prevent flipping
-        if (cam->angles.x > M_PIdiv2) {
-            cam->angles.x = M_PIdiv2;
-        }
-        if (cam->angles.x < -M_PIdiv2) {
-            cam->angles.x = -M_PIdiv2;
-        }
+        cam->angles.x = cam->angles.x>M_PIdiv2?M_PIdiv2:cam->angles.x;
+        cam->angles.x = cam->angles.x<-M_PIdiv2?-M_PIdiv2:cam->angles.x;
+
         printf("Yaw after: %f\n", cam->angles.y);
     }
 }
@@ -33,7 +30,7 @@ void handle_camera_rotation(camera_t *cam, const SDL_Event *event){
 real get_distance_to_closest_vertex(entity_t **entities, int num_entities,camera_t *cam){// this will need to be changed into two functions, one that calculated for x axis, and z-axis respectively.
     //we use the pythagorean theorem on each vertex
     real min = 100;
-    vec4_t origin = {0,0,0,0};
+    vec4_t origin = {{{0,0,0,0}}};
     for(int i = 0 ; i < num_entities;i++){
         for(int j = 0; j < entities[i]->mesh->vertex_count;j++){
             real dist = get_distance(&entities[i]->mesh->camera_verts[j], &(origin));
