@@ -4,6 +4,7 @@
 #include "alg.h"
 #include "defines.h"
 #include "entities.h"
+#include <math.h>
 #include <stdbool.h>
 
 // Forward declaration pointing to the tagged struct

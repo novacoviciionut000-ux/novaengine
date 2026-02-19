@@ -71,14 +71,17 @@ void gameLoop(){
         goto CLEANUP;
     }
     const long deltaTime = 5;
+    const long debugTimer = 1000;
     long lastTime = SDL_GetTicks();
     while(running){
         handle_event_and_delta(deltaTime, &lastTime, &running,entities, entity_count, cam);
-
+        
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         render_entities(entities, renderer, entity_count);
-
+        if(SDL_GetTicks() % debugTimer == 0){
+            printf("Camera position: x: %f, y: %f, z: %f\n", cam->pos.x, cam->pos.y, cam->pos.z);
+        }
         // Game rendering logic goes here
         SDL_RenderPresent(renderer);
 

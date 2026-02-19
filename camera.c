@@ -1,6 +1,5 @@
 #include "handle_input.h"
 #include "camera.h"
-
 camera_t* create_camera(vec4_t pos, eulerangles_t angles, real speed, real angular_speed){
     camera_t* cam = malloc(sizeof(camera_t));
     if(!cam){
@@ -15,9 +14,15 @@ camera_t* create_camera(vec4_t pos, eulerangles_t angles, real speed, real angul
 void handle_camera_rotation(camera_t *cam, const SDL_Event *event){
     if(event->type == SDL_EVENT_MOUSE_MOTION){
         cam->angles.y += event->motion.xrel * SENSITIVITY;
-        cam->angles.x += event->motion.yrel * SENSITIVITY;
-        if (cam->angles.x < -1.5f) cam->angles.x = -1.5f;
-        if (cam->angles.x > 1.5f) cam->angles.x = 1.5f;
+        //cam->angles.x += event->motion.yrel * SENSITIVITY;
+        // Clamp the pitch to prevent flipping
+        if (cam->angles.x > M_PIdiv2) {
+            cam->angles.x = M_PIdiv2;
+        }
+        if (cam->angles.x < -M_PIdiv2) {
+            cam->angles.x = -M_PIdiv2;
+        }
+        
     }
 }
 void handle_camera_translation(camera_t *cam, const uint8_t *keyboard_state){
@@ -28,9 +33,8 @@ void handle_camera_translation(camera_t *cam, const uint8_t *keyboard_state){
 }
 void move_world_to_camera_space(const camera_t *cam, entity_t **entities, int entity_count){
     mat4_t rotation = mat4_identity();
-    rotation = rot_z(&rotation, -cam->angles.z, true);
     rotation = rot_y(&rotation, -cam->angles.y, true);
-    rotation = rot_x(&rotation, -cam->angles.x, true);
+    //rotation = rot_x(&rotation, -cam->angles.x, true);
     for(int i = 0; i < entity_count;i++){
         for(int j = 0; j < entities[i]->mesh->vertex_count; j++){
 

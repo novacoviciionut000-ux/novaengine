@@ -4,7 +4,6 @@
 #include "alg.h"
 #include "defines.h"
 #include <SDL3/SDL.h>
-
 // Notice the 'camera_t' tag added right after the word 'struct'
 typedef struct camera_t {
     vec4_t pos;

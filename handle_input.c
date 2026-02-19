@@ -10,26 +10,35 @@ input_state_t get_input(const uint8_t *keyboard_state){
     input.backward = keyboard_state[SDL_SCANCODE_S];
     return input;
 }
-vec4_t get_velocity_from_input(const input_state_t *input, camera_t *cam){
+vec4_t get_velocity_from_input(const input_state_t *input, camera_t *cam) {
     vec4_t velocity = {0};
-    if(input->up) {
-       velocity.y = cam -> speed;
+    real yaw = -cam->angles.y;
+
+    float forward_x = -sinf(yaw); 
+    float forward_z = cosf(yaw);
+
+    float right_x = cosf(yaw);
+    float right_z = sinf(yaw);
+    // W and S: Move along the forward vector
+    if (input->forward) {
+        velocity.x += forward_x * cam->speed;
+        velocity.z += forward_z * cam->speed;
     }
-    if(input->down) {
-        velocity.y = -cam -> speed;
+    if (input->backward) {
+        velocity.x -= forward_x * cam->speed;
+        velocity.z -= forward_z * cam->speed;
     }
-    if(input->left) {
-        velocity.x = cam -> speed;
+
+    // A and D: Move along the right vector
+    if (input->right) {
+        velocity.x += right_x * cam->speed;
+        velocity.z += right_z * cam->speed;
     }
-    if(input->right) {
-        velocity.x = -cam -> speed;
+    if (input->left) {
+        velocity.x -= right_x * cam->speed;
+        velocity.z -= right_z * cam->speed;
     }
-    if(input->forward){
-        velocity.z = -cam -> speed;
-    }
-    if(input->backward){
-        velocity.z = cam -> speed;
-    }
+
     return velocity;
 }
 
