@@ -50,6 +50,10 @@ void gameLoop(){
     entity_t* myCube2 = create_cube_entity((vec4_t){.x=2, .y=0, .z=5, .w=FOCAL}, 1,1,1);
 
     entity_t* myCube = create_diamond_entity((vec4_t){.x=0, .y=0, .z=5, .w=FOCAL}, 1);
+    entity_t *bunny = get_obj("bunny.obj", (vec4_t){{{0,0,0,0}}});
+    if(bunny == NULL) goto CLEANUP;
+    bunny->angles.x = M_PI;
+    entities[entity_count++] = bunny;
 
     entity_t *myCar = create_car_entity((vec4_t){.x=-2, .y=0, .z=5, .w=FOCAL}, 1);
     myCube2 -> color = (SDL_FColor){1.0f,0.0f,1.0f,1.0f};

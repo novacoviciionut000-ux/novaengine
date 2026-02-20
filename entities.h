@@ -1,7 +1,6 @@
 #ifndef ENTITIES_H
 #define ENTITIES_H
 #include <stdbool.h>
-#include "projection_math.h"
 #include "defines.h"
 #include <SDL3/SDL.h>
 #include "alg.h"
