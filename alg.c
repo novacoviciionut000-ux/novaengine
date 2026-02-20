@@ -249,3 +249,12 @@ real get_distance(vec4_t *vecA, vec4_t *vecB){
     (vecA->z - vecB->z) * (vecA->z - vecB->z));
     return dist;
 }
+vec3_t vec4tovec3(vec4_t *vec){
+    vec3_t vec3 = {0};
+    vec3.x = vec->x;
+    vec3.y = vec->y;
+    vec3.z = vec->z;
+    return vec3;
+
+
+}

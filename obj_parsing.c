@@ -1,7 +1,7 @@
 #include "obj_parsing.h"
 
 #define EXPECTED_VERTS 1024
-entity_t *get_obj(char *pathname, vec4_t position){
+entity_t *get_obj(char *pathname, vec4_t position,SDL_FColor color){
     FILE *file = fopen(pathname, "r");
     entity_t *obj = NULL;
     mesh_t *mesh = NULL;
@@ -85,7 +85,7 @@ entity_t *get_obj(char *pathname, vec4_t position){
     obj -> velocity = (vec4_t){{{0,0,0,0}}};
     obj -> angular_velocity = (vec4_t){{{0,0,0,0}}};
     obj -> angular_speed = 0.01f;
-    obj -> color = (SDL_FColor){1.0f,0.0f,1.0f,1.0f};
+    obj -> color = color;
     obj->movable = true;
     obj -> triangles = calloc(triangle_indice/3, sizeof(triangle_t));
     if(obj -> triangles == NULL)goto CLEANUP;

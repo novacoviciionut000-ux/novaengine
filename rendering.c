@@ -23,29 +23,49 @@ bool in_sight(const vec4_t *vert, camera_t *cam){
     real dot_product = dotprod4(&dir_to_vert, &forward);
     return dot_product > -4.0f ? true:false;//i added a buffer to prevent clipping, this is to be removed in the future as it causes objects to appear off the screen 
 }
+real backfacecull(vec4_t *v1, vec4_t *v2, vec4_t *v3){
+    vec4_t negative1 = scale_vec4(*v1, -1.0f);
+    vec4_t side_1 = add_vec4(v3, &negative1);
+    vec4_t side_2 = add_vec4(v2, &negative1);
+    vec3_t real_side1 = vec4tovec3(&side_1);
+    vec3_t real_side2 = vec4tovec3(&side_2);
+    vec3_t normal = crossprod3(&real_side1, &real_side2);
+    vec4_t tmp  = (scale_vec4(*v1,-1.0f));
+    vec3_t view = vec4tovec3(&tmp);
+    return dotprod3(&normal,&view);
+}
 bool painters_algorithm(entity_t *entity){
     //we sort the triangles of the entity by their average depth, and then we render them in order from farthest to closest, this is a very simple implementation of the painter's algorithm, it is not very efficient but it works for our purposes, since we are only rendering a few entities with a few triangles each, it should be fine for now, but if we want to render more complex scenes with more entities and more triangles, we will need to implement a more efficient sorting algorithm, such as quicksort or mergesort, or we can use a spatial data structure such as a BSP tree or a octree to sort the triangles more efficiently
     int triangle_count = entity->mesh->triangle_count;
     int* triangle_map = entity->mesh->triangle_map;
     vec4_t* world_verts = entity->mesh->camera_verts;
+    int visible_count = 0;
     for(int i = 0; i < triangle_count * 3; i+=3){
         int idx0 = triangle_map[i];
         int idx1 = triangle_map[i+1];
-        int idx2 = triangle_map[i+2];
-        int triangle_idx = i / 3;
-        entity->triangles[triangle_idx].idx0 = idx0;
-        entity->triangles[triangle_idx].idx1 = idx1;
-        entity->triangles[triangle_idx].idx2 = idx2;
-        entity->triangles[triangle_idx].avg_depth = (world_verts[idx0].z + world_verts[idx1].z + world_verts[idx2].z) / 3.0f;
+        int idx2 = triangle_map[i+2];//basically, we take the pairs of 3 from the triangle_map (indices of the vertices that form the triangles)
+        vec4_t v1 = entity->mesh->camera_verts[idx0];
+        vec4_t v2 = entity->mesh->camera_verts[idx1];
+        vec4_t v3 = entity->mesh->camera_verts[idx2];//these are the points that make up the triangle
+        if(backfacecull(&v1,&v2,&v3) > 0.001f) continue;
+        
+
+
+        entity->triangles[visible_count].idx0 = idx0;
+        entity->triangles[visible_count].idx1 = idx1;//then, we put them in their corresponding triangle slot in the entity's triangle buffer(already allocated at creation)
+        entity->triangles[visible_count].idx2 = idx2;//the actual source of the vertices we use for rendering are made below based on this step.
+        entity->triangles[visible_count].avg_depth = (world_verts[idx0].z + world_verts[idx1].z + world_verts[idx2].z) / 3.0f;
+        //i implemented it this like this because before that, i was allocating a triangles array on each frame and freeing it. That was a performance killer
+        visible_count++;
     }
-    qsort(entity->triangles, triangle_count, sizeof(triangle_t), cmp);
+    qsort(entity->triangles, visible_count, sizeof(triangle_t), cmp);
     int actual_pos = 0;
-    for(int i = 0; i < triangle_count; i++){
+    for(int i = 0; i < visible_count; i++){
         int idx0 = entity->triangles[i].idx0;
         int idx1 = entity->triangles[i].idx1;
         int idx2 = entity->triangles[i].idx2;
-        entity->mesh->triangle_map[actual_pos++] = idx0;
-        entity->mesh->triangle_map[actual_pos++] = idx1;
+        entity->mesh->triangle_map[actual_pos++] = idx0;//now we are basically changing the triangle map to the configuration that the painter's algorithm made
+        entity->mesh->triangle_map[actual_pos++] = idx1;//THESE are actually the information that will be used for rendering.
         entity->mesh->triangle_map[actual_pos++] = idx2;
     }
     return true;
@@ -65,27 +85,28 @@ bool fill_entity(entity_t *entity, SDL_Renderer *renderer){
         int idx0 = entity->mesh->triangle_map[i];
         int idx1 = entity->mesh->triangle_map[i+1];
         int idx2 = entity->mesh->triangle_map[i+2];
-        vec4_t vert0 = entity->mesh->camera_verts[idx0];
+        vec4_t vert0 = entity->mesh->camera_verts[idx0];//we now take the vertices that make up the triangle (3D space)
         vec4_t vert1 = entity->mesh->camera_verts[idx1];
         vec4_t vert2 = entity->mesh->camera_verts[idx2];
         if(vert0.z <= 0.001f || vert1.z <= 0.001f || vert2.z <= 0.001f){
             continue;
         }
+        //culling logic MUST come before the arithmetic in vec4tovert which basically does expensive operations to convert 3d coordinates to screen space.
 
-
-        SDL_Vertex v1 = vec4tovert(entity,&vert0);
+        SDL_Vertex v1 = vec4tovert(entity,&vert0);// we convert them to SDL_Vertex which is in 2D space(vec4tovert calls projection_math.c functions, check that)
         SDL_Vertex v2 = vec4tovert(entity,&vert1);
         SDL_Vertex v3 = vec4tovert(entity,&vert2);
 
 
 
-        
-        entity->vertices[curr_vertex++] = v1;
+        //there are 2d vertices, they are already sorted so we can just feed them to render_geometry without any indice map.
+        entity->vertices[curr_vertex++] = v1;//now we feed them into the entity's vertices(they are already ordered by painter's algorithm)
         entity->vertices[curr_vertex++] = v2;
         entity->vertices[curr_vertex++] = v3;
  
     }
     if(curr_vertex == 0)return true;
+    //now we feed the vertices(pairs of 3's technically) into SDL_RenderGeometry with the map parameter set to NULL, as they already in-order
     if(!SDL_RenderGeometry(renderer, NULL, entity->vertices, curr_vertex, NULL, 0)){
         return false;
 
@@ -132,3 +153,6 @@ bool render_entities(entity_t **entity, SDL_Renderer *renderer, int entity_count
     }
     return true;
 }
+
+//NOTE: If we spawn something behind a bunny, the thing behind it clips through. To prevent this, we need a Z-Buffer, basically , we take all the triangle data, store it in a massive array, and only then use painter's algorithm.
+//also, maybe swap the quicksort for radix-sort.
