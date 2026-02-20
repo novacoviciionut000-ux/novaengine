@@ -109,7 +109,7 @@ bool wireframerender(entity_t *entity, SDL_Renderer *renderer){
 }
 bool render_entity(entity_t *entity, SDL_Renderer *renderer){
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    if(entity->mesh->indice_map != NULL){
+    if(entity->mesh->indice_map != NULL){//this is nullable because in most cases we DO NOT want a wireframe entity, mostly for testing purposes.
         if(!wireframerender(entity, renderer)){
             return false;
         }
