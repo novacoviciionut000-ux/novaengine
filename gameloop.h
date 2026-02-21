@@ -10,5 +10,8 @@
 bool initializeGame(SDL_Window** window, SDL_Renderer** renderer);
 void gameLoop();
 void cleanUp(SDL_Window* window, SDL_Renderer* renderer);
-
+typedef{
+    entity_t* entities;
+    unsigned long numtriangles;
+}scene_t;
 #endif

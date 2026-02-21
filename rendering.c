@@ -1,7 +1,7 @@
 #include "rendering.h"
 int cmp(const void* ptrA, const void* ptrb){
-    if(((triangle_t*)ptrA)->avg_depth < ((triangle_t*)ptrb)->avg_depth) return -1;
-    if(((triangle_t*)ptrA)->avg_depth > ((triangle_t*)ptrb)->avg_depth) return 1;
+    if(((triangle_t*)ptrA)->avg_depth < ((triangle_t*)ptrb)->avg_depth) return 1;
+    if(((triangle_t*)ptrA)->avg_depth > ((triangle_t*)ptrb)->avg_depth) return -1;
     return 0;
 }
 vec4_t get_forward(camera_t *cam){

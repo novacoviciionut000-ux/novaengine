@@ -53,19 +53,24 @@ void free_entity(entity_t *entity){
 int* create_cube_triangles(){
     int* triangle_map = malloc(36 * sizeof(int));
     int cube_triangle_map[] = {
-        // Front face (Z+)
-        0, 5, 1,   0, 4, 5, 
-        // Right face (X+)
-        1, 6, 2,   1, 5, 6,
-        // Back face (Z-)
-        2, 7, 3,   2, 6, 7,
-        // Left face (X-)
-        3, 4, 0,   3, 7, 4,
-        // Top face (Y+)
-        4, 6, 5,   4, 7, 6,
-        // Bottom face (Y-)
-        0, 2, 1,   0, 3, 2
-    };
+            // Front Face
+            0, 5, 1,    0, 4, 5, 
+            
+            // Right Face
+            1, 6, 2,    1, 5, 6,
+            
+            // Back Face
+            2, 7, 3,    2, 6, 7,
+            
+            // Left Face
+            3, 4, 0,    3, 7, 4,
+            
+            // Top Face
+            4, 6, 5,    4, 7, 6,
+            
+            // Bottom Face
+            3, 1, 2,    3, 0, 1  
+        };
     for(int i = 0; i < 36; i++) triangle_map[i] = cube_triangle_map[i];
     return triangle_map;
 }
