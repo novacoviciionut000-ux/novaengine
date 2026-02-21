@@ -83,8 +83,10 @@ entity_t *get_obj(char *pathname, vec4_t position,SDL_FColor color){
     obj -> angular_velocity = (vec4_t){{{0,0,0,0}}};
     obj -> angular_speed = 0.01f;
     obj -> color = color;
-    obj->movable = true;
+    obj->dirty = true;
     fclose(file);
+
+    rotate_entity(obj);
     return obj;
     CLEANUP:
     if (obj) {

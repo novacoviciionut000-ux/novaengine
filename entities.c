@@ -1,5 +1,6 @@
 #include "entities.h"
 
+
 void rotate_entity(entity_t *entity){
     mat4_t id = mat4_identity();
     mat4_t m_rot_z = rot_z(&id, entity->angles.z, true);
@@ -7,17 +8,22 @@ void rotate_entity(entity_t *entity){
     mat4_t final_matrix = rot_x(&m_rot_y, entity->angles.x, true);
     for(int i = 0; i < entity->mesh->vertex_count; i++){
         // A. Rotate (from Local Storage)
-        vec4_t rotated = apply_transform(&final_matrix, &entity->mesh->local_verts[i]);
+            vec4_t rotated = apply_transform(&final_matrix, &entity->mesh->local_verts[i]);
 
-        // B. Translate (Add Position)
-        vec4_t world_pos = add_vec4(&rotated, &entity->pos);
+            // B. Translate (Add Position)
+            vec4_t world_pos = add_vec4(&rotated, &entity->pos);
+            entity->mesh->world_verts[i] = world_pos;
 
+        
 
-        entity->mesh->world_verts[i] = world_pos;
     }
+    entity->dirty = false;
 
 }
-
+bool isZero_vec(vec4_t vecA){
+    if(vecA.x == 0 && vecA.y == 0 && vecA.z == 0)return true;
+    return false;
+}
 void add_angular_velocity(eulerangles_t *angles, vec4_t angular_velocity){
     angles->x += angular_velocity.x;
     angles->y += angular_velocity.y;
@@ -25,9 +31,16 @@ void add_angular_velocity(eulerangles_t *angles, vec4_t angular_velocity){
 }
 void update_entity(entity_t *entity){
 
-    entity->pos = add_vec4(&entity->pos, &entity->velocity);
-    add_angular_velocity(&entity->angles, entity->angular_velocity);
-    rotate_entity(entity);
+    if(!isZero_vec(entity->velocity)){
+        entity->pos = add_vec4(&entity->pos, &entity->velocity);
+        entity->dirty = true;
+    }
+    if(!isZero_vec(entity->angular_velocity)){
+        add_angular_velocity(&entity->angles, entity->angular_velocity);
+        entity->dirty = true;
+    }
+    if(entity->dirty)
+        rotate_entity(entity);
 
 }
 void update_entities(entity_t **entities, int entity_count){
@@ -111,17 +124,18 @@ mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int triangle_count, int*
     }
     return mesh;
 }
-entity_t* create_entity(vec4_t pos, mesh_t *mesh, bool movable){
+entity_t* create_entity(vec4_t pos, mesh_t *mesh){
     entity_t *entity = calloc(1,sizeof(entity_t));
     entity->color = (SDL_FColor){1.0f, 1.0f, 1.0f, 1.0f}; // Default to solid white
     entity->pos = pos;
     entity->velocity = (vec4_t){{{0,0,0,0}}};
     entity->angular_velocity = (vec4_t){{{0,0,0,0}}};
-    entity->movable = movable;
+    entity->dirty = true;
     entity->mesh = mesh;
     entity->speed = 0.01f;
     entity->angular_speed = 0.01f;
     entity->angles = (eulerangles_t){0,0,0};
+    rotate_entity(entity);
     return entity;
 }
 entity_t* create_cube_entity(vec4_t pos, real length, real width, real height){
@@ -134,7 +148,7 @@ entity_t* create_cube_entity(vec4_t pos, real length, real width, real height){
         return NULL;
     }  
     mesh_t* cube_mesh = create_mesh(local_verts, 8,12,triangle_map);
-    entity_t* cube_entity = create_entity(pos, cube_mesh, true);
+    entity_t* cube_entity = create_entity(pos, cube_mesh);
     return cube_entity;
 }
 

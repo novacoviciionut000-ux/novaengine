@@ -31,7 +31,7 @@ typedef struct{
     vec4_t pos; //the position of the center of the entity
     vec4_t velocity;
     vec4_t angular_velocity;
-    bool movable;
+    bool dirty;
     mesh_t *mesh;
     size_t pool_offset;//used for rendering purposes for the scenes.h logic.
     real speed;//highly useful for changing the speed of the entity without changing the velocity vector, which is useful for things like acceleration and deceleration, as well as for things like power-ups that can change the speed of the entity temporarily
@@ -43,10 +43,11 @@ typedef struct{
 
 vec4_t* create_cube_local_vertices(real length, real width, real height);
 mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int triangle_count, int* triangle_map);
-entity_t* create_entity(vec4_t pos, mesh_t *mesh, bool movable);
+entity_t* create_entity(vec4_t pos, mesh_t *mesh);
 void rotate_entity(entity_t *entity);
 void free_entity(entity_t *entity);
 SDL_Vertex* vec4tovertex(entity_t *entity);
+bool isZero_vec(vec4_t vecA);
 int* create_cube_triangles();
 void update_entity(entity_t *entity);
 void update_entities(entity_t **entities, int entity_count);

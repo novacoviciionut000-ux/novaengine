@@ -50,7 +50,6 @@ void gameLoop(){
     entity_t *bunny = get_obj("bunny.obj", (vec4_t){{{0,0,0,0}}} , (SDL_FColor){0.0f, 0.8f, 0.8f, 1.0f});
     if(!add_entity(scene, bunny))goto CLEANUP;
         bunny->angles.x = M_PI;
-        bunny -> angular_velocity = (vec4_t){{{0,0.01f,0,1}}};
         myCube2 -> color = (SDL_FColor){1.0f,0.0f,1.0f,1.0f};
         myCube2 -> angular_velocity = (vec4_t){{{0.0f, 0.01f,0.0f,0.0f}}};
     cam = create_camera((vec4_t){{{.x=0, .y=0, .z=0, .w=FOCAL}}}, (eulerangles_t){.x=0, .y=0, .z=0}, 0.01f, 0.01f);
