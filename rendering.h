@@ -2,7 +2,6 @@
 #define RENDERING_H
 #include "projection_math.h"
 #include <SDL3/SDL.h>
-#include "entities.h"
 #include "scenes.h"
 #include "alg.h"
 #include "camera.h"

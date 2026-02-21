@@ -4,6 +4,7 @@
 #define SCREEN_HEIGHT 1080
 #define ANGULAR_VELOCITY 0.01f
 #define SENSITIVITY 0.01f
+#define WORLD_SCALE_FACTOR 50.0f
 #define FOCAL 400
 
 typedef float real;

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "projection_math.h"
 #include "camera.h"
+#include "timers.h"
 #include "rendering.h"
 #include "handle_input.h"
 #include "scenes.h"

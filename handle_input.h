@@ -5,7 +5,7 @@
 #include "defines.h"
 #include "entities.h"
 #include <math.h>
-
+#include "timers.h"
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -17,7 +17,7 @@ typedef struct {
 } input_state_t;
 
 vec4_t get_velocity_from_input(const input_state_t *input, camera_t *cam);
-void handle_event_and_delta(long deltaTime, long *lastTime, bool *running, entity_t **entities, int entity_count, camera_t *cam);
+void handle_event_and_delta(long deltaTime, bool *running,entity_t **entities, int entity_count, camera_t *cam, real dt);
 input_state_t get_input(const uint8_t *keyboard_state);
 
 #endif

@@ -10,7 +10,7 @@ TARGET = main
 TEST_TARGET = test
 
 # Source files (Removed squares.c)
-SOURCES = main.c alg.c gameloop.c entities.c handle_input.c projection_math.c camera.c rendering.c obj_parsing.c scenes.c
+SOURCES = main.c alg.c gameloop.c entities.c handle_input.c projection_math.c camera.c rendering.c obj_parsing.c scenes.c timers.c
 TEST_SOURCES = test.c alg.c
 
 # Object files (Automatically generated from SOURCES)

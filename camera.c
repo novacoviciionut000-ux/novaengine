@@ -46,11 +46,12 @@ void update_grounded(camera_t* cam, entity_t **entities, int numentities){//This
 
     }
 }
-void handle_camera_translation(camera_t *cam, const uint8_t *keyboard_state){
+void handle_camera_translation(camera_t *cam, const uint8_t *keyboard_state, real dt){
     vec4_t velocity = {0};
     input_state_t input = get_input(keyboard_state);
     velocity = get_velocity_from_input(&input, cam);
-    cam->pos = add_vec4(&cam->pos, &velocity);
+    vec4_t total_translation = scale_vec4(velocity, dt * WORLD_SCALE_FACTOR);
+    cam->pos = add_vec4(&cam->pos, &total_translation);
 }
 void move_world_to_camera_space(const camera_t *cam, entity_t **entities, int entity_count){
     mat4_t rotation = mat4_identity();

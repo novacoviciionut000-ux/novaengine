@@ -24,28 +24,29 @@ bool isZero_vec(vec4_t vecA){
     if(vecA.x <= 0.001f && vecA.y <= 0.001f && vecA.z <= 0.001f)return true;
     return false;
 }
-void add_angular_velocity(eulerangles_t *angles, vec4_t angular_velocity){
-    angles->x += angular_velocity.x;
-    angles->y += angular_velocity.y;
-    angles->z += angular_velocity.z;
+void add_angular_velocity(eulerangles_t *angles, vec4_t angular_velocity, real dt){
+    angles->x += angular_velocity.x * dt * WORLD_SCALE_FACTOR;
+    angles->y += angular_velocity.y * dt * WORLD_SCALE_FACTOR;
+    angles->z += angular_velocity.z * dt * WORLD_SCALE_FACTOR;
 }
-void update_entity(entity_t *entity){
+void update_entity(entity_t *entity, real dt){
 
     if(!isZero_vec(entity->velocity)){
-        entity->pos = add_vec4(&entity->pos, &entity->velocity);
+        vec4_t total_translation = scale_vec4(entity->velocity, dt * WORLD_SCALE_FACTOR);
+        entity->pos = add_vec4(&entity->pos, &(total_translation));
         entity->dirty = true;
     }
     if(!isZero_vec(entity->angular_velocity)){
-        add_angular_velocity(&entity->angles, entity->angular_velocity);
+        add_angular_velocity(&entity->angles, entity->angular_velocity, dt);
         entity->dirty = true;
     }
     if(entity->dirty)
         rotate_entity(entity);
 
 }
-void update_entities(entity_t **entities, int entity_count){
+void update_entities(entity_t **entities, int entity_count, real dt){
     for(int i = 0; i < entity_count; i++){
-        update_entity(entities[i]);
+        update_entity(entities[i], dt);
     }
 }
 
