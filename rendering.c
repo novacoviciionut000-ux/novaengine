@@ -1,25 +1,65 @@
 #include "rendering.h"
-int cmp(const void* ptrA, const void* ptrB) {
-    const triangle_t* a = (const triangle_t*)ptrA;
-    const triangle_t* b = (const triangle_t*)ptrB;
+void radix_sort_triangles(triangle_t *triangles, uint32_t *indices, uint32_t *temp_indices, size_t count) {
+    uint32_t *in = indices;
+    uint32_t *out = temp_indices;
 
-    if (a->avg_depth < b->avg_depth) return 1;//trebuie crescator
-    if (a->avg_depth > b->avg_depth) return -1;
-    
-    return 0;
+    for (size_t i = 0; i < count; i++) in[i] = i;
+
+    for (int shift = 0; shift < 32; shift += 8) {
+        size_t buckets[256] = {0};
+
+        // 1. Counting Pass
+        for (size_t i = 0; i < count; i++) {
+            float depth = triangles[in[i]].avg_depth;
+            uint32_t depth_bits;
+            
+            // Safe bit-cast to avoid strict-aliasing warnings
+            memcpy(&depth_bits, &depth, sizeof(uint32_t));
+            
+            // FLIP BITS: Since your Z is always positive, inverting bits 
+            // creates a descending order (Far to Near).
+            depth_bits = ~depth_bits;
+
+            uint8_t byte_val = (depth_bits >> shift) & 0xFF;
+            buckets[byte_val]++;
+        }
+
+        // 2. Prefix Sum
+        size_t current_offset = 0;
+        for (int i = 0; i < 256; i++) {
+            size_t bucket_size = buckets[i];
+            buckets[i] = current_offset;
+            current_offset += bucket_size;
+        }
+
+        // 3. Sorting Pass
+        for (size_t i = 0; i < count; i++) {
+            float depth = triangles[in[i]].avg_depth;
+            uint32_t depth_bits;
+            
+            memcpy(&depth_bits, &depth, sizeof(uint32_t));
+            depth_bits = ~depth_bits; // Must match the counting pass flip!
+
+            uint8_t byte_val = (depth_bits >> shift) & 0xFF;
+            out[buckets[byte_val]++] = in[i];
+        }
+
+        // 4. Swap buffers
+        uint32_t *tmp = in;
+        in = out;
+        out = tmp;
+    }
 }
-
 real backfacecull(vec4_t *v1, vec4_t *v2, vec4_t *v3){
     vec4_t negative1 = scale_vec4(*v1, -1.0f);
     
-    // SWAPPED THESE TWO LINES
-    vec4_t side_1 = add_vec4(v2, &negative1); // side_1 is now v2 - v1
-    vec4_t side_2 = add_vec4(v3, &negative1); // side_2 is now v3 - v1
+    vec4_t side_1 = add_vec4(v2, &negative1); // side_1 is  v2 - v1
+    vec4_t side_2 = add_vec4(v3, &negative1); // side_2 is  v3 - v1
     
     vec3_t real_side1 = vec4tovec3(&side_1);
     vec3_t real_side2 = vec4tovec3(&side_2);
     
-    // Normalize sides to prevent the NaN floating point bug on small triangles!
+    // Normalize sides to prevent the NaN floating point bug on small triangles
     real_side1 = normalize_vec3(&real_side1);
     real_side2 = normalize_vec3(&real_side2);
     
@@ -129,7 +169,7 @@ size_t sync_scene(scene_t *scene){
             vec4_t *cv2 = clipped[n].camera_positions[1];
             vec4_t *cv3 = clipped[n].camera_positions[2];
 
-            // 4. FRUSTUM CULLING (Moved inside the loop, using the new cv pointers!)
+            // 4. FRUSTUM CULLING
             if (cv1->x < -cv1->z * margin_x && cv2->x < -cv2->z * margin_x && cv3->x < -cv3->z * margin_x) continue;
             if (cv1->x > cv1->z * margin_x && cv2->x > cv2->z * margin_x && cv3->x > cv3->z * margin_x) continue;
             if (cv1->y < -cv1->z * margin_y && cv2->y < -cv2->z * margin_y && cv3->y < -cv3->z * margin_y) continue;
@@ -137,17 +177,22 @@ size_t sync_scene(scene_t *scene){
 
             // 5. RECALCULATE DEPTH AND PUSH TO RENDERER
             clipped[n].avg_depth = (cv1->z + cv2->z + cv3->z) / 3.0f;
-            
+            float fog_density = 0.2f; // the "FOG FACTOR"
+            float fog_factor = exp(-clipped[n].avg_depth * fog_density);
+
+            // Clamp it so it doesn't go crazy
+            if (fog_factor < 0.0f) fog_factor = 0.0f;
+            if (fog_factor > 1.0f) fog_factor = 1.0f;
             scene->render_usage[visible] = clipped[n];
-            scene->render_usage[visible].color.r *= light;
-            scene->render_usage[visible].color.g *= light;
-            scene->render_usage[visible].color.b *= light;
+            scene->render_usage[visible].color.r *= light * fog_factor;
+            scene->render_usage[visible].color.g *= light * fog_factor;
+            scene->render_usage[visible].color.b *= light * fog_factor;
             
             visible++;
         }
     }
     
-    if(visible != 0) qsort(scene->render_usage, visible, sizeof(triangle_t), cmp);
+    if(visible != 0) radix_sort_triangles(scene->render_usage, scene->indices, scene->temp_indices, visible);
     return visible;
 }
 SDL_Vertex vec4tovert(vec4_t *vec, SDL_FColor color){
@@ -157,11 +202,14 @@ SDL_Vertex vec4tovert(vec4_t *vec, SDL_FColor color){
     return vert;
 }
 void fill_verts(scene_t *scene, size_t visible){
-    size_t index = 0;
-    for(size_t i = 0; i < visible;i++){
-        scene->verts[index++] = vec4tovert(scene->render_usage[i].camera_positions[0], scene->render_usage[i].color);
-        scene->verts[index++] = vec4tovert(scene->render_usage[i].camera_positions[1], scene->render_usage[i].color);
-        scene->verts[index++] = vec4tovert(scene->render_usage[i].camera_positions[2], scene->render_usage[i].color);
+    size_t vert_index = 0;
+    for(size_t i = 0; i < visible; i++){
+        uint32_t tri_idx = scene->indices[i];
+        triangle_t *tri = &scene->render_usage[tri_idx];
+
+        scene->verts[vert_index++] = vec4tovert(tri->camera_positions[0], tri->color);
+        scene->verts[vert_index++] = vec4tovert(tri->camera_positions[1], tri->color);
+        scene->verts[vert_index++] = vec4tovert(tri->camera_positions[2], tri->color);
     }
 }
 bool render_scene(scene_t *scene, SDL_Renderer *renderer){

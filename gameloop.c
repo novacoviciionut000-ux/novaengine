@@ -29,9 +29,9 @@ void cleanUp(SDL_Window* window, SDL_Renderer* renderer) {
 
 
 void gameLoop(){
-    int starting_id = 0;
     size_t entity_count = 0;
     camera_t *cam = NULL;
+    scene_t *scene = NULL;
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     entity_t **entities = NULL;
@@ -40,7 +40,7 @@ void gameLoop(){
         goto CLEANUP;
     }
     bool running = true;
-    scene_t *scene = create_scene();
+    scene = create_scene();
     if(!scene)goto CLEANUP;
     entity_t* myCube2 = create_cube_entity((vec4_t){{{0.0f, 0.0f, 0.0f, 1.0f}}}, 1, 1, 1);
     if(!add_entity(scene, myCube2))goto CLEANUP;
@@ -58,7 +58,6 @@ void gameLoop(){
     update_entities(scene->entities, scene->numentities);
     move_world_to_camera_space(cam, scene->entities, scene->numentities);
     const long deltaTime = 5;
-    const long debugTimer = 1000;
     long lastTime = SDL_GetTicks();
     while(running){
         handle_event_and_delta(deltaTime, &lastTime, &running,scene->entities, scene->numentities, cam);
@@ -66,7 +65,6 @@ void gameLoop(){
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         bool val = render_scene(scene, renderer);
-
 
         SDL_RenderPresent(renderer);
         // Game rendering logic goes here
@@ -84,10 +82,7 @@ void gameLoop(){
     if(cam)
         free(cam);
     cleanUp(window, renderer);
-    if(scene -> triangles)free(scene->triangles);
-    if(scene->render_usage)free(scene->render_usage);
-    if(scene->verts)free(scene->verts);
-    if(scene)free(scene);
+    destroy_scene(scene);
 
 
 

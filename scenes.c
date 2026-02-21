@@ -1,28 +1,42 @@
 #include "scenes.h"
 #define CHUNK 16
 #define EXPECTED_TRIANGLES 4096
-scene_t *create_scene(){
+scene_t *create_scene() {
     scene_t* scene = calloc(1, sizeof(scene_t));
-    if(scene == NULL)goto CLEANUP;
-    scene -> allocated_mem = CHUNK;
-    scene -> allocated_triangles = EXPECTED_TRIANGLES;
-    scene -> numentities = 0;
-    scene -> numtriangles = 0;
-    scene -> entities = calloc(scene->allocated_mem, sizeof(entity_t*));
-    if(scene->entities == NULL)goto CLEANUP;
-    scene -> triangles = calloc(scene->allocated_triangles, sizeof(triangle_t));
-    if(scene -> triangles == NULL)goto CLEANUP;
-    scene -> render_usage = calloc(scene->allocated_triangles, sizeof(triangle_t));
-    if(scene -> render_usage == NULL) goto CLEANUP;
-    scene -> verts = calloc(scene-> allocated_triangles * 3, sizeof(SDL_Vertex));
+    if(scene == NULL) return NULL;
+
+    scene->allocated_mem = CHUNK;
+    scene->allocated_triangles = EXPECTED_TRIANGLES;
+    
+    // Core Entity List
+    scene->entities = calloc(scene->allocated_mem, sizeof(entity_t*));
+    
+    // Primary Triangle Pool
+    scene->triangles = calloc(scene->allocated_triangles, sizeof(triangle_t));
+    
+    // Rendering Buffers (Using the *2 safety multiplier for clipping)
+    scene->render_usage = calloc(scene->allocated_triangles * 2, sizeof(triangle_t));
+    scene->verts = calloc(scene->allocated_triangles * 2 * 3, sizeof(SDL_Vertex));
+    
+    // Radix Sort & Clipping Buffers
+    scene->transient_buffer = calloc(scene->allocated_triangles * 2 * 3, sizeof(vec4_t));
+    scene->indices = calloc(scene->allocated_triangles * 2, sizeof(uint32_t));
+    scene->temp_indices = calloc(scene->allocated_triangles * 2, sizeof(uint32_t));
+
+    // Simple one-time check for all allocations
+    if(!scene->entities || !scene->triangles || !scene->render_usage || 
+       !scene->verts || !scene->transient_buffer || !scene->indices || !scene->temp_indices) {
+        if(scene -> entities)free(scene->entities);
+        if(scene -> triangles)free(scene->triangles);
+        if(scene->render_usage)free(scene->render_usage);
+        if(scene->verts)free(scene->verts);
+        if(scene->transient_buffer)free(scene->transient_buffer);
+        if(scene->indices)free(scene->indices);
+        if(scene->temp_indices)free(scene->temp_indices);
+        return NULL;
+    }
+
     return scene;
-    CLEANUP:
-    if(scene -> triangles) free(scene->triangles);
-    if(scene -> render_usage) free(scene -> render_usage);
-    if(scene -> verts) free(scene -> verts);
-    if(scene -> entities) free(scene -> entities);
-    if(scene) free(scene);
-    return NULL;
 }
 void add_triangles(entity_t *entity, scene_t *scene, size_t write_index){
     for(int i = 0; i < entity->mesh->triangle_count * 3; i += 3){
@@ -60,16 +74,21 @@ bool add_entity(scene_t *scene, entity_t *entity){
 
         // Try all reallocs first
         triangle_t *t1 = realloc(scene->triangles, new_alloc_count * sizeof(triangle_t));
-        triangle_t *t2 = realloc(scene->render_usage, new_alloc_count * 2 * sizeof(triangle_t));// we over-allocate to prevent buffer overflows as at runtime 1 triangle may be split into two.
+        triangle_t *t2 = realloc(scene->render_usage, new_alloc_count * 2 * sizeof(triangle_t));
         SDL_Vertex *t3 = realloc(scene->verts, new_alloc_count * 2 * 3 * sizeof(SDL_Vertex));
+        vec4_t *t4 = realloc(scene->transient_buffer, new_alloc_count * 2 * 3 * sizeof(vec4_t));
+        uint32_t *t5 = realloc(scene->indices, new_alloc_count * 2 * sizeof(uint32_t));
+        uint32_t *t6 = realloc(scene->temp_indices, new_alloc_count * 2 * sizeof(uint32_t));
 
-        // If ANY fail, we have a problem (in a real engine you'd handle this more gracefully)
-        if(!t1 || !t2 || !t3) return false;
+        // FIXED: Added t5 and t6 to the safety check
+        if(!t1 || !t2 || !t3 || !t4 || !t5 || !t6) return false;
 
-        // Only apply changes if all succeeded
         scene->triangles = t1;
         scene->render_usage = t2;
         scene->verts = t3;
+        scene->transient_buffer = t4;
+        scene->indices = t5;
+        scene->temp_indices = t6;
         scene->allocated_triangles = new_alloc_count;
     }
 
@@ -81,8 +100,6 @@ bool add_entity(scene_t *scene, entity_t *entity){
     add_triangles(entity, scene, entity->pool_offset);
     
     scene->numtriangles = new_total_tris; // Finalize the count
-    scene->transient_buffer = calloc(new_alloc_count * 2 * 3, sizeof(vec4_t));
-    if(!scene->transient_buffer)return false;
     return true;
 }
 void _patch_scene_after_removal(scene_t *scene, size_t start_offset, size_t triangle_count) {
@@ -121,4 +138,26 @@ void remove_entity_by_ptr(scene_t *scene, entity_t *target) {
             return;
         }
     }
+}
+void destroy_scene(scene_t *scene) {
+    if (!scene) return;
+
+    // 1. Free all entities still in the list
+    for (size_t i = 0; i < scene->numentities; i++) {
+        free(scene->entities[i]); 
+    }
+    free(scene->entities);
+
+    // 2. Free all the master triangle and vertex pools
+    free(scene->triangles);
+    free(scene->render_usage);
+    free(scene->verts);
+    
+    // 3. Free the Radix Sort and Clipping scratchpads
+    free(scene->transient_buffer);
+    free(scene->indices);
+    free(scene->temp_indices);
+
+    // 4. Finally, free the scene struct itself
+    free(scene);
 }

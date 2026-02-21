@@ -63,7 +63,6 @@ void handle_event_and_delta(long deltaTime, long *lastTime, bool *running,entity
         *running = false;
     }
     long currentTime = SDL_GetTicks();
-    input_state_t input = get_input(keyboard_state);
 
     if(currentTime - *lastTime >= deltaTime) {
         *lastTime = currentTime;    
