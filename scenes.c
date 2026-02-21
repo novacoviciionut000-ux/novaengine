@@ -41,6 +41,7 @@ void add_triangles(entity_t *entity, scene_t *scene, size_t write_index){
 }
 
 bool add_entity(scene_t *scene, entity_t *entity){
+    size_t new_alloc_count = 0;
     // 1. Handle Entity Array Capacity
     if(scene->numentities >= scene->allocated_mem){
         scene->allocated_mem += CHUNK;
@@ -52,15 +53,15 @@ bool add_entity(scene_t *scene, entity_t *entity){
     // 2. Handle Triangle Pool Capacity
     size_t new_total_tris = scene->numtriangles + entity->mesh->triangle_count;
     if(new_total_tris >= scene->allocated_triangles){
-        size_t new_alloc_count = scene->allocated_triangles;
+        new_alloc_count = scene->allocated_triangles;
         while(new_alloc_count <= new_total_tris) {
             new_alloc_count += EXPECTED_TRIANGLES;
         }
 
         // Try all reallocs first
         triangle_t *t1 = realloc(scene->triangles, new_alloc_count * sizeof(triangle_t));
-        triangle_t *t2 = realloc(scene->render_usage, new_alloc_count * sizeof(triangle_t));
-        SDL_Vertex *t3 = realloc(scene->verts, new_alloc_count * 3 * sizeof(SDL_Vertex));
+        triangle_t *t2 = realloc(scene->render_usage, new_alloc_count * 2 * sizeof(triangle_t));// we over-allocate to prevent buffer overflows as at runtime 1 triangle may be split into two.
+        SDL_Vertex *t3 = realloc(scene->verts, new_alloc_count * 2 * 3 * sizeof(SDL_Vertex));
 
         // If ANY fail, we have a problem (in a real engine you'd handle this more gracefully)
         if(!t1 || !t2 || !t3) return false;
@@ -80,6 +81,8 @@ bool add_entity(scene_t *scene, entity_t *entity){
     add_triangles(entity, scene, entity->pool_offset);
     
     scene->numtriangles = new_total_tris; // Finalize the count
+    scene->transient_buffer = calloc(new_alloc_count * 2 * 3, sizeof(vec4_t));
+    if(!scene->transient_buffer)return false;
     return true;
 }
 void _patch_scene_after_removal(scene_t *scene, size_t start_offset, size_t triangle_count) {

@@ -7,6 +7,7 @@
 #include "alg.h"
 #include "camera.h"
 #include <stdbool.h>
+#include "defines.h"
 #include <stdlib.h>
 bool render_scene(scene_t *scene, SDL_Renderer *renderer);
 void fill_verts(scene_t *scene, size_t visible);

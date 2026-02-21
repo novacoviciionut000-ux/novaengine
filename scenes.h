@@ -15,6 +15,8 @@ typedef struct{
     size_t numtriangles;
     triangle_t *triangles;
     triangle_t *render_usage;//same, triangle array so that i do not allocate memory each frame at runtime.
+    vec4_t *transient_buffer; //This is for clipping triangles( we need something for the new triangles to point to.)
+    size_t transient_count;
     SDL_Vertex* verts;//this is not used anywhere else but the rendering
     size_t allocated_triangles;
 }scene_t;
