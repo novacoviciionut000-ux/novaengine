@@ -21,7 +21,7 @@ void rotate_entity(entity_t *entity){
 
 }
 bool isZero_vec(vec4_t vecA){
-    if(vecA.x == 0 && vecA.y == 0 && vecA.z == 0)return true;
+    if(vecA.x <= 0.001f && vecA.y <= 0.001f && vecA.z <= 0.001f)return true;
     return false;
 }
 void add_angular_velocity(eulerangles_t *angles, vec4_t angular_velocity){
