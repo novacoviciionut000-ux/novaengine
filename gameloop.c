@@ -42,7 +42,10 @@ void gameLoop(){
     bool running = true;
     scene = create_scene();
     if(!scene)goto CLEANUP;
-    entity_t* myCube2 = create_cube_entity((vec4_t){{{0.0f, 0.0f, 0.0f, 1.0f}}}, 1, 1, 1);
+    const SDL_FColor SPACESHIP_WHITE = {0.2f, 0.0f, 0.2f, 1.0f};
+    entity_t* myCube2 = create_cube_entity((vec4_t){{{0.3f, 1.0f, 0.0f, 1.0f}}}, 1, 1, 1);
+    entity_t *spaceship = get_obj("spaceship.obj", (vec4_t){{{0.0f,-1.0f, 0.0f,0.0f}}}, SPACESHIP_WHITE);
+    if(!add_entity(scene, spaceship))goto CLEANUP;
     if(!add_entity(scene, myCube2))goto CLEANUP;
     entity_t *bunny = get_obj("bunny.obj", (vec4_t){{{0,0,0,0}}} , (SDL_FColor){0.0f, 0.8f, 0.8f, 1.0f});
     if(!add_entity(scene, bunny))goto CLEANUP;
