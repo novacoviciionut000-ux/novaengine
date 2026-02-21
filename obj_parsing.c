@@ -77,19 +77,13 @@ entity_t *get_obj(char *pathname, vec4_t position,SDL_FColor color){
     obj -> mesh -> world_verts = calloc(curr_verts,sizeof(vec4_t));
     if(obj->mesh->world_verts == NULL)goto CLEANUP;
     obj -> mesh -> camera_verts = calloc(curr_verts, sizeof(vec4_t));
-    obj -> mesh -> indice_map = NULL;//we upload non-wireframe entities
     obj -> mesh -> triangle_count = triangle_indice/3;
-    obj -> mesh -> indice_count = 0;
     obj -> pos = position;
     obj -> velocity = (vec4_t){{{0,0,0,0}}};
     obj -> angular_velocity = (vec4_t){{{0,0,0,0}}};
     obj -> angular_speed = 0.01f;
     obj -> color = color;
     obj->movable = true;
-    obj -> triangles = calloc(triangle_indice/3, sizeof(triangle_t));
-    if(obj -> triangles == NULL)goto CLEANUP;
-    obj -> vertices = calloc(triangle_indice, sizeof(SDL_Vertex));
-    if(obj -> vertices == NULL)goto CLEANUP;
     fclose(file);
     return obj;
     CLEANUP:
@@ -101,8 +95,6 @@ entity_t *get_obj(char *pathname, vec4_t position,SDL_FColor color){
             free(obj->mesh->camera_verts);
             free(obj->mesh);
         }
-        free(obj->triangles);
-        free(obj->vertices);
         free(obj);
     }
     if (file) fclose(file);

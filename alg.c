@@ -258,3 +258,9 @@ vec3_t vec4tovec3(vec4_t *vec){
 
 
 }
+vec3_t normalize_vec3(vec3_t *v){
+    float mag_sq = dotprod3(v, v);
+    if (mag_sq < 0.000001f) return (vec3_t){0, 0, 0}; // Guard against zero-length
+    vec3_t normalized = scale_vec3(*v, 1.0f/sqrtf(mag_sq));
+    return normalized;
+}

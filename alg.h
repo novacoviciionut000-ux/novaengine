@@ -50,6 +50,7 @@ vec4_t crossprod4(const vec4_t *vecA, const vec4_t *vecB);//ignore the w-compone
 vec3_t add_vec3(const vec3_t *vecA, const vec3_t *vecB);
 vec4_t add_vec4(const vec4_t *vecA, const vec4_t *vecB);
 vec3_t vec4tovec3(vec4_t *vec);
+vec3_t normalize_vec3(vec3_t *v);
 void mlt_mat4_p(mat4_t *dest, const mat4_t *matA, const mat4_t *matB);
 void mlt_mat3_p(mat3_t *dest, const mat3_t *matA, const mat3_t *matB);
 void add_mat4_p(mat4_t *dest, const mat4_t *matA, const mat4_t *matB);

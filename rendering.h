@@ -3,13 +3,15 @@
 #include "projection_math.h"
 #include <SDL3/SDL.h>
 #include "entities.h"
+#include "scenes.h"
 #include "alg.h"
 #include "camera.h"
+#include <stdbool.h>
 #include <stdlib.h>
-bool fill_entity(entity_t *entity, SDL_Renderer *renderer);
-bool render_entities(entity_t **entity, SDL_Renderer *renderer, int entity_count,camera_t *cam);
-bool render_entity(entity_t *entity, SDL_Renderer *renderer);
-vec4_t get_forward(camera_t *cam);
-
-
+bool render_scene(scene_t *scene, SDL_Renderer *renderer);
+void fill_verts(scene_t *scene, size_t visible);
+SDL_Vertex vec4tovert(vec4_t *vec, SDL_FColor color);
+size_t sync_scene(scene_t *scene);
+real backfacecull(vec4_t *v1, vec4_t *v2, vec4_t *v3);
+int cmp(const void* ptrA, const void* ptrb);
 #endif
