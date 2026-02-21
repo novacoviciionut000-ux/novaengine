@@ -47,7 +47,7 @@ void gameLoop(){
         printf("Failed to allocate memory for entities\n");
         goto CLEANUP;
     }
-    entity_t* myCube2 = create_cube_entity((vec4_t){.x=2, .y=0, .z=5, .w=FOCAL}, 1,1,1);
+    entity_t* myCube2 = create_cube_entity((vec4_t){{{0.0f, 0.0f, 0.0f, 1.0f}}}, 1, 1, 1);
 
     entity_t *bunny = get_obj("bunny.obj", (vec4_t){{{0,0,0,0}}} , (SDL_FColor){0.0f, 0.8f, 0.8f, 1.0f});
     if(bunny == NULL) goto CLEANUP;
@@ -65,6 +65,7 @@ void gameLoop(){
         printf("Failed to create cube\n");
         goto CLEANUP;
     }
+    myCube2 -> angular_velocity = (vec4_t){{{0.0f, 0.01f,0.0f,0.0f}}};
     entities[entity_count++] = myCube2;
     cam = create_camera((vec4_t){{{.x=0, .y=0, .z=0, .w=FOCAL}}}, (eulerangles_t){.x=0, .y=0, .z=0}, 0.01f, 0.01f);
     if(!cam){

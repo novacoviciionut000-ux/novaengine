@@ -53,16 +53,20 @@ void free_entity(entity_t *entity){
 int* create_cube_triangles(){
     int* triangle_map = malloc(36 * sizeof(int));
     int cube_triangle_map[] = {
-        0,1,2, 0,2,3, //bottom face
-        4,5,6, 4,6,7, //top face
-        0,1,5, 0,5,4, //front face
-        1,2,6, 1,6,5, //right face
-        2,3,7, 2,7,6, //back face
-        3,0,4, 3,4,7 //left face
+        // Front face (Z+)
+        0, 5, 1,   0, 4, 5, 
+        // Right face (X+)
+        1, 6, 2,   1, 5, 6,
+        // Back face (Z-)
+        2, 7, 3,   2, 6, 7,
+        // Left face (X-)
+        3, 4, 0,   3, 7, 4,
+        // Top face (Y+)
+        4, 6, 5,   4, 7, 6,
+        // Bottom face (Y-)
+        0, 2, 1,   0, 3, 2
     };
-    for(int i = 0; i < 36; i++){
-        triangle_map[i] = cube_triangle_map[i];
-    }
+    for(int i = 0; i < 36; i++) triangle_map[i] = cube_triangle_map[i];
     return triangle_map;
 }
 vec4_t* create_cube_local_vertices(real length, real width, real height){
@@ -71,29 +75,17 @@ vec4_t* create_cube_local_vertices(real length, real width, real height){
     real half_width = width / 2.0;
     real half_height = height / 2.0;
     //bottom face
-    local_verts[0] = (vec4_t){.x=-half_length, .y=-half_width, .z=half_height, .w=FOCAL}; //front left
-    local_verts[1] = (vec4_t){.x=half_length, .y=-half_width, .z=half_height, .w=FOCAL}; //front right
-    local_verts[2] = (vec4_t){.x=half_length, .y=-half_width, .z=-half_height, .w=FOCAL}; //back right
-    local_verts[3] = (vec4_t){.x=-half_length, .y=-half_width, .z=-half_height, .w=FOCAL}; //back left
+    local_verts[0] = (vec4_t){.x=-half_length, .y=-half_width, .z=half_height, .w=1}; //front left
+    local_verts[1] = (vec4_t){.x=half_length, .y=-half_width, .z=half_height, .w=1}; //front right
+    local_verts[2] = (vec4_t){.x=half_length, .y=-half_width, .z=-half_height, .w=1}; //back right
+    local_verts[3] = (vec4_t){.x=-half_length, .y=-half_width, .z=-half_height, .w=1}; //back left
     //top face
-    local_verts[4] = (vec4_t){.x=-half_length, .y=half_width, .z=half_height, .w=FOCAL}; //front left
-    local_verts[5] = (vec4_t){.x=half_length, .y=half_width, .z=half_height, .w=FOCAL}; //front right
-    local_verts[6] = (vec4_t){.x=half_length, .y=half_width, .z=-half_height, .w=FOCAL}; //back right
-    local_verts[7] = (vec4_t){.x=-half_length, .y=half_width, .z=-half_height, .w=FOCAL}; //back left
+    local_verts[4] = (vec4_t){.x=-half_length, .y=half_width, .z=half_height, .w=1}; //front left
+    local_verts[5] = (vec4_t){.x=half_length, .y=half_width, .z=half_height, .w=1}; //front right
+    local_verts[6] = (vec4_t){.x=half_length, .y=half_width, .z=-half_height, .w=1}; //back right
+    local_verts[7] = (vec4_t){.x=-half_length, .y=half_width, .z=-half_height, .w=1}; //back left
 
     return local_verts;
-}
-int* create_cube_indice_map(){
-    int* indice_map = malloc(24 * sizeof(int));
-    int cube_indice_map[] = {
-        0,1, 1,2, 2,3, 3,0, //bottom face
-        4,5, 5,6, 6,7, 7,4, //top face
-        0,4, 1,5, 2,6, 3,7 //vertical edges
-    };
-    for(int i = 0; i < 24; i++){
-        indice_map[i] = cube_indice_map[i];
-    }
-    return indice_map;
 }
 
 mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int num_indices, int* indice_map, int triangle_count, int* triangle_map){
@@ -140,16 +132,14 @@ entity_t* create_entity(vec4_t pos, mesh_t *mesh, bool movable){
 }
 entity_t* create_cube_entity(vec4_t pos, real length, real width, real height){
     vec4_t* local_verts = create_cube_local_vertices(length, width, height);
-    int* indice_map = create_cube_indice_map();
     int* triangle_map = create_cube_triangles();
 
-    if(indice_map == NULL || local_verts == NULL || triangle_map == NULL){
-        if(indice_map)free(indice_map);
+    if(local_verts == NULL || triangle_map == NULL){
         if(local_verts)free(local_verts);
         if(triangle_map)free(triangle_map);
         return NULL;
     }  
-    mesh_t* cube_mesh = create_mesh(local_verts, 8, 24, indice_map,12,triangle_map);
+    mesh_t* cube_mesh = create_mesh(local_verts, 8, 0, NULL,12,triangle_map);
     entity_t* cube_entity = create_entity(pos, cube_mesh, true);
     return cube_entity;
 }
@@ -160,12 +150,12 @@ entity_t* create_diamond_entity(vec4_t pos, real size) {
     vec4_t* local_verts = malloc(num_verts * sizeof(vec4_t));
     
     // Define the 6 points of the octahedron
-    local_verts[0] = (vec4_t){.x =  0,    .y =  size, .z =  0,    .w = FOCAL}; // Top
-    local_verts[1] = (vec4_t){.x =  0,    .y = -size, .z =  0,    .w = FOCAL}; // Bottom
-    local_verts[2] = (vec4_t){.x = -size, .y =  0,    .z =  size, .w = FOCAL}; // Front-Left
-    local_verts[3] = (vec4_t){.x =  size, .y =  0,    .z =  size, .w = FOCAL}; // Front-Right
-    local_verts[4] = (vec4_t){.x =  size, .y =  0,    .z = -size, .w = FOCAL}; // Back-Right
-    local_verts[5] = (vec4_t){.x = -size, .y =  0,    .z = -size, .w = FOCAL}; // Back-Left
+    local_verts[0] = (vec4_t){.x =  0,    .y =  size, .z =  0,    .w = 1}; // Top
+    local_verts[1] = (vec4_t){.x =  0,    .y = -size, .z =  0,    .w = 1}; // Bottom
+    local_verts[2] = (vec4_t){.x = -size, .y =  0,    .z =  size, .w = 1}; // Front-Left
+    local_verts[3] = (vec4_t){.x =  size, .y =  0,    .z =  size, .w = 1}; // Front-Right
+    local_verts[4] = (vec4_t){.x =  size, .y =  0,    .z = -size, .w = 1}; // Back-Right
+    local_verts[5] = (vec4_t){.x = -size, .y =  0,    .z = -size, .w = 1}; // Back-Left
 
     // Connect the dots (Wireframe indices)
     int* indices = malloc(num_indices * sizeof(int));

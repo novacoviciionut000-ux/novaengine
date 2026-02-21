@@ -55,7 +55,6 @@ entity_t *get_obj(char *pathname, vec4_t position,SDL_FColor color){
                 token = strtok(NULL, " \t\r\n");
             }
 
-            // Convert the N-gon into a fan of triangles
             for (int i = 1; i < v_count - 1; i++) {
                 // Check/Grow your triangle_map memory here (same as before)
                 if(triangle_indice + 3 >= allocated_triangles) {

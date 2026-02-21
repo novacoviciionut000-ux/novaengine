@@ -34,7 +34,7 @@ real backfacecull(vec4_t *v1, vec4_t *v2, vec4_t *v3){
     vec3_t view = vec4tovec3(&tmp);
     return dotprod3(&normal,&view);
 }
-bool painters_algorithm(entity_t *entity){
+bool painters_algorithm(entity_t *entity, int* actual_count){
     //we sort the triangles of the entity by their average depth, and then we render them in order from farthest to closest, this is a very simple implementation of the painter's algorithm, it is not very efficient but it works for our purposes, since we are only rendering a few entities with a few triangles each, it should be fine for now, but if we want to render more complex scenes with more entities and more triangles, we will need to implement a more efficient sorting algorithm, such as quicksort or mergesort, or we can use a spatial data structure such as a BSP tree or a octree to sort the triangles more efficiently
     int triangle_count = entity->mesh->triangle_count;
     int* triangle_map = entity->mesh->triangle_map;
@@ -60,14 +60,7 @@ bool painters_algorithm(entity_t *entity){
     }
     qsort(entity->triangles, visible_count, sizeof(triangle_t), cmp);
     int actual_pos = 0;
-    for(int i = 0; i < visible_count; i++){
-        int idx0 = entity->triangles[i].idx0;
-        int idx1 = entity->triangles[i].idx1;
-        int idx2 = entity->triangles[i].idx2;
-        entity->mesh->triangle_map[actual_pos++] = idx0;//now we are basically changing the triangle map to the configuration that the painter's algorithm made
-        entity->mesh->triangle_map[actual_pos++] = idx1;//THESE are actually the information that will be used for rendering.
-        entity->mesh->triangle_map[actual_pos++] = idx2;
-    }
+    *actual_count = visible_count;
     return true;
 }
 SDL_Vertex vec4tovert(entity_t *entity, vec4_t *vec){
@@ -77,14 +70,15 @@ SDL_Vertex vec4tovert(entity_t *entity, vec4_t *vec){
     return vert;
 }
 bool fill_entity(entity_t *entity, SDL_Renderer *renderer){
-    if(!painters_algorithm(entity)){
+    int visible_count = 0;
+    if(!painters_algorithm(entity, &visible_count)){
         return false;
     }
     int curr_vertex = 0;
-    for(int i = 0; i < entity->mesh->triangle_count * 3; i+=3){
-        int idx0 = entity->mesh->triangle_map[i];
-        int idx1 = entity->mesh->triangle_map[i+1];
-        int idx2 = entity->mesh->triangle_map[i+2];
+    for(int i = 0; i < visible_count; i++){
+        int idx0 = entity->triangles[i].idx0;
+        int idx1 = entity->triangles[i].idx1;
+        int idx2 = entity->triangles[i].idx2;
         vec4_t vert0 = entity->mesh->camera_verts[idx0];//we now take the vertices that make up the triangle (3D space)
         vec4_t vert1 = entity->mesh->camera_verts[idx1];
         vec4_t vert2 = entity->mesh->camera_verts[idx2];
