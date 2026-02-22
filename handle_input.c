@@ -74,16 +74,21 @@ void handle_event_and_delta(long deltaTime, bool *running,scene_t *scene, camera
         if(!cam->sprinting){
             cam->speed *= 3;
 
-            cam->focal_length = 300;
+
             cam->sprinting = true;
 
+        }else{
+            if(cam->focal_length >= 300)cam->focal_length-=200 * dt;
+            if(cam -> focal_length < 300)cam->focal_length = 300;
         }
     }else{
         if(cam->sprinting){
             cam->speed /=3;
-            cam->focal_length = 400;
             cam->sprinting = false;
 
+        }else{
+            if(cam->focal_length <= 400)cam->focal_length+=200 * dt;
+            if(cam->focal_length > 400)cam->focal_length = 400;
         }
 
 
