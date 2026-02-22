@@ -10,6 +10,7 @@ camera_t* create_camera(vec4_t pos, eulerangles_t angles, real speed, real angul
     cam->speed = speed;
     cam->angular_speed = angular_speed;
     cam->angles = angles;
+    cam->radius = 0.05f;
     cam -> grounded = 0;
     return cam;
 }

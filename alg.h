@@ -5,36 +5,6 @@
 #include <stdbool.h>
 #include "defines.h"
 #define M_PIdiv2 1.57079632
-typedef struct{
-  union{
-    struct{real x,y,z;};
-    real vals[3];
-    
-  };
-  
-}vec3_t;
-typedef struct{
-  union{
-    struct{real x,y,z,w;};
-    real vals[4];
-    
-  };
-  
-}vec4_t;
-typedef struct{
-  union{
-    real m[3][3];
-    real v[9];
-  };
-  
-}mat3_t;
-typedef struct{
-   union{
-    real m[4][4];
-    real v[16];
-  };
-  
-}mat4_t;
 
 real get_distance(vec4_t *vecA, vec4_t *vecB);
 mat4_t mlt_mat4(const mat4_t *matA, const mat4_t *matB);

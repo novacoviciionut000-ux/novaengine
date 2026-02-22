@@ -6,7 +6,7 @@ typedef enum { PLANE_NEAR, PLANE_LEFT, PLANE_RIGHT, PLANE_TOP, PLANE_BOTTOM } fr
 
 bool is_inside(vec4_t *p, frustum_plane_t plane, float margin_x, float margin_y) {
     switch (plane) {
-        case PLANE_NEAR:   return p->z >= 0.1f;
+        case PLANE_NEAR:   return p->z >= 0.01f;
         case PLANE_LEFT:   return p->x >= -p->z * margin_x;
         case PLANE_RIGHT:  return p->x <=  p->z * margin_x;
         case PLANE_TOP:    return p->y <=  p->z * margin_y;
@@ -15,7 +15,7 @@ bool is_inside(vec4_t *p, frustum_plane_t plane, float margin_x, float margin_y)
     return false;
 }
 
-void init_starfield(scene_t *scene) {
+void init_starfield(scene_t *scene) {//just for fun and to have a "frame of reference" in the void :)
     for (int i = 0; i < NUM_STARS; i++) {
         // Randomly scatter stars in a sphere with radius 1
         float theta = (float)rand() / RAND_MAX * 2.0f * M_PI;
@@ -30,7 +30,7 @@ void init_starfield(scene_t *scene) {
 void draw_stars(SDL_Renderer *renderer, const camera_t *cam, scene_t *scene) {
     // 1. Create the rotation matrix to transform world-space stars to camera-space
     mat4_t rotation = mat4_identity();
-    // We use the same inverse angles as your world transformation
+    // We use the same inverse angles as the world transformation
     rotation = rot_x(&rotation, cam->angles.x, true);
     rotation = rot_y(&rotation, -cam->angles.y, true);
 
@@ -152,7 +152,7 @@ bool is_triangle_outside(vec4_t *v1, vec4_t *v2, vec4_t *v3, float mx, float my)
     float max_z = v1->z; if (v2->z > max_z) max_z = v2->z; if (v3->z > max_z) max_z = v3->z;
 
     // Fast-fail: entirely behind the near plane
-    if (max_z < 0.1f) return true;
+    if (max_z < 0.01f) return true;
 
     float min_x = v1->x; if (v2->x < min_x) min_x = v2->x; if (v3->x < min_x) min_x = v3->x;
     float max_x = v1->x; if (v2->x > max_x) max_x = v2->x; if (v3->x > max_x) max_x = v3->x;
@@ -254,9 +254,9 @@ size_t sync_scene(scene_t *scene){
                                         (center_z * center_z));
 
             // 3. Apply the fog using the spherical radial distance
-            real fog_density = 0.3f;
+            real fog_density = 0.5f;
             real fog_factor = exp(-radial_distance * fog_density);
-            if(fog_factor < 0.1f)continue;
+            if(fog_factor < 0.03f)continue;
             // Clamp it so it doesn't go crazy
             if (fog_factor > 1.0f) fog_factor = 1.0f;
 

@@ -29,19 +29,30 @@ void add_angular_velocity(eulerangles_t *angles, vec4_t angular_velocity, real d
     angles->y += angular_velocity.y * dt * WORLD_SCALE_FACTOR;
     angles->z += angular_velocity.z * dt * WORLD_SCALE_FACTOR;
 }
+void update_collisionbox(entity_t *entity, vec4_t *velocity){
+    entity->collision_box->min_x += velocity->x;
+    entity->collision_box->max_x += velocity->x;
+    entity-> collision_box->min_y += velocity->y;
+    entity->collision_box->max_y += velocity->y;
+    entity->collision_box->min_z += velocity->z;
+    entity->collision_box->max_z += velocity->z;
+}
 void update_entity(entity_t *entity, real dt){
 
     if(!isZero_vec(entity->velocity)){
         vec4_t total_translation = scale_vec4(entity->velocity, dt * WORLD_SCALE_FACTOR);
         entity->pos = add_vec4(&entity->pos, &(total_translation));
         entity->dirty = true;
+        update_collisionbox(entity, &total_translation);
     }
     if(!isZero_vec(entity->angular_velocity)){
         add_angular_velocity(&entity->angles, entity->angular_velocity, dt);
         entity->dirty = true;
     }
-    if(entity->dirty)
+    if(entity->dirty){
         rotate_entity(entity);
+        *(entity->collision_box) = get_entity_collisionbox(entity);
+    }
 
 }
 void update_entities(entity_t **entities, int entity_count, real dt){
@@ -57,6 +68,7 @@ void free_entity(entity_t *entity){
     free(entity->mesh->triangle_map);    
     free(entity->mesh->camera_verts);
     free(entity->mesh);
+    free(entity->collision_box);
     free(entity);
 }
 int* create_cube_triangles(){
@@ -127,6 +139,7 @@ mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int triangle_count, int*
 }
 entity_t* create_entity(vec4_t pos, mesh_t *mesh){
     entity_t *entity = calloc(1,sizeof(entity_t));
+    if(!entity) return NULL;
     entity->color = (SDL_FColor){1.0f, 1.0f, 1.0f, 1.0f}; // Default to solid white
     entity->pos = pos;
     entity->velocity = (vec4_t){{{0,0,0,0}}};
@@ -136,6 +149,9 @@ entity_t* create_entity(vec4_t pos, mesh_t *mesh){
     entity->speed = 0.01f;
     entity->angular_speed = 0.01f;
     entity->angles = (eulerangles_t){0,0,0};
+    entity->collision_box = calloc(1, sizeof(collisionbox_t));
+    if(!entity->collision_box){free(entity);return NULL;}
+    *(entity->collision_box) = get_entity_collisionbox(entity);
     rotate_entity(entity);
     return entity;
 }

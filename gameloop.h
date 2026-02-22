@@ -1,5 +1,6 @@
 #ifndef GLOOP_H
 #define GLOOP_H
+#include "defines.h"
 #include "entities.h"
 #include <stdio.h>
 #include "projection_math.h"

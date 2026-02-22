@@ -50,14 +50,14 @@ void gameLoop(){
 
     const SDL_FColor SPACESHIP_WHITE = {0.1f, 0.4f, 0.1f, 1.0f};
     SDL_FColor neon_green = {0.0f, 1.0f, 0.0f, 1.0f};
-    entity_t* myCube2 = create_cube_entity((vec4_t){{{0.3f, 1.0f, 0.0f, 1.0f}}}, 1, 1, 1);
+    entity_t* myCube2 = create_cube_entity((vec4_t){{{1.0f, 1.0f, 0.0f, 1.0f}}}, 1, 1, 1);
     if(!add_entity(scene, myCube2))goto CLEANUP;
-    entity_t *bunny = get_obj("bunny.obj", (vec4_t){{{0,0,0,0}}} , neon_green);
+    entity_t *bunny = get_obj("bunny.obj", (vec4_t){{{-3.0f,1.0f,0,0}}} , neon_green);
     if(bunny == NULL){perror("opening file");goto CLEANUP;}
     if(!add_entity(scene, bunny))goto CLEANUP;
     bunny -> angles.x = M_PI;
     bunny -> dirty = true;
-        myCube2 -> color = (SDL_FColor){1.0f,0.0f,1.0f,1.0f};
+        myCube2 -> color = (SDL_FColor){3.0f,0.0f,1.0f,1.0f};
         myCube2 -> angular_velocity = (vec4_t){{{0.0f, 0.01f,0.0f,0.0f}}};
     cam = create_camera((vec4_t){{{.x=0, .y=0, .z=0, .w=FOCAL}}}, (eulerangles_t){.x=0, .y=0, .z=0}, 0.01f, 0.01f);
     if(!cam){
@@ -75,6 +75,7 @@ void gameLoop(){
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         bool val = render_scene(scene, renderer, false, cam);
+        handle_and_check_collision(scene, cam);
 
         SDL_RenderPresent(renderer);
         // Game rendering logic goes here

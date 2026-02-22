@@ -12,11 +12,10 @@ entity_t *get_obj(char *pathname, vec4_t position,SDL_FColor color){
     obj = calloc(1, sizeof(entity_t));
     if(obj == NULL) goto CLEANUP;
     
-    mesh = calloc(1, sizeof(mesh_t)); // Now all internal pointers are safely NULL
+    mesh = calloc(1, sizeof(mesh_t)); 
     if(mesh == NULL) goto CLEANUP;
     obj->mesh = mesh;
 
-    // Allocate and immediately bind so CLEANUP can find them if a crash happens
     obj->mesh->local_verts = malloc(EXPECTED_VERTS * sizeof(vec4_t));
     obj->mesh->triangle_map = malloc(sizeof(int) * EXPECTED_VERTS);
     
@@ -79,11 +78,14 @@ entity_t *get_obj(char *pathname, vec4_t position,SDL_FColor color){
     obj -> mesh -> camera_verts = calloc(curr_verts, sizeof(vec4_t));
     obj -> mesh -> triangle_count = triangle_indice/3;
     obj -> pos = position;
+    obj->collision_box = calloc(1, sizeof(collisionbox_t));
+    if(!obj->collision_box)goto CLEANUP;
     obj -> velocity = (vec4_t){{{0,0,0,0}}};
     obj -> angular_velocity = (vec4_t){{{0,0,0,0}}};
     obj -> angular_speed = 0.01f;
     obj -> color = color;
     obj->dirty = true;
+    *(obj -> collision_box) = get_entity_collisionbox(obj);
     fclose(file);
 
     rotate_entity(obj);
@@ -97,6 +99,7 @@ entity_t *get_obj(char *pathname, vec4_t position,SDL_FColor color){
             free(obj->mesh->camera_verts);
             free(obj->mesh);
         }
+        free(obj -> collision_box);
         free(obj);
     }
     if (file) fclose(file);
