@@ -10,6 +10,7 @@ typedef struct{
     vec4_t *camera_positions[3];
     SDL_FColor color;
     real avg_depth;
+    real dprod;
 
 }triangle_t;
 typedef struct{

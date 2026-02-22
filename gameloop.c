@@ -47,9 +47,10 @@ void gameLoop(){
     real dt = delta_time(timer);
     if(!scene)goto CLEANUP;
     const SDL_FColor SPACESHIP_WHITE = {0.1f, 0.4f, 0.1f, 1.0f};
+    SDL_FColor neon_green = {0.0f, 1.0f, 0.0f, 1.0f};
     entity_t* myCube2 = create_cube_entity((vec4_t){{{0.3f, 1.0f, 0.0f, 1.0f}}}, 1, 1, 1);
     if(!add_entity(scene, myCube2))goto CLEANUP;
-    entity_t *bunny = get_obj("bunny.obj", (vec4_t){{{0,0,0,0}}} , (SDL_FColor){0.0f, 0.8f, 0.8f, 1.0f});
+    entity_t *bunny = get_obj("casa bosque.obj", (vec4_t){{{0,10.0f,-100.0f,0}}} , neon_green);
     if(bunny == NULL){perror("opening file");goto CLEANUP;}
     if(!add_entity(scene, bunny))goto CLEANUP;
     bunny -> angles.x = M_PI;
@@ -71,7 +72,7 @@ void gameLoop(){
         
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        bool val = render_scene(scene, renderer);
+        bool val = render_scene(scene, renderer, false);
 
         SDL_RenderPresent(renderer);
         // Game rendering logic goes here

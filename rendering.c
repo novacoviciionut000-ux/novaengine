@@ -16,7 +16,6 @@ void radix_sort_triangles(triangle_t *triangles, uint32_t *indices, uint32_t *te
             // Safe bit-cast to avoid strict-aliasing warnings
             memcpy(&depth_bits, &depth, sizeof(uint32_t));
             
-            // FLIP BITS: Since your Z is always positive, inverting bits 
             // creates a descending order (Far to Near).
             depth_bits = ~depth_bits;
 
@@ -73,7 +72,7 @@ real backfacecull(vec4_t *v1, vec4_t *v2, vec4_t *v3){
     return dotprod3(&normal, &view);
 }
 vec4_t* intersect_near_plane(vec4_t *p1, vec4_t *p2, scene_t *scene) {
-    float z_near = 0.01f;
+    float z_near = 0.0001f;
     float t = (z_near - p1->z) / (p2->z - p1->z);
     
     //the next slot in the transient buffer
@@ -88,7 +87,7 @@ vec4_t* intersect_near_plane(vec4_t *p1, vec4_t *p2, scene_t *scene) {
     return out;
 }
 int clip_triangle(triangle_t *in_tri, triangle_t *out_tri_1, triangle_t *out_tri_2, scene_t *scene) {
-    float z_near = 0.01f;
+    float z_near = 0.0001f;
     
     vec4_t* inside_pts[3];  int inside_count = 0;
     vec4_t* outside_pts[3]; int outside_count = 0;
@@ -174,12 +173,22 @@ size_t sync_scene(scene_t *scene){
             if (cv1->x > cv1->z * margin_x && cv2->x > cv2->z * margin_x && cv3->x > cv3->z * margin_x) continue;
             if (cv1->y < -cv1->z * margin_y && cv2->y < -cv2->z * margin_y && cv3->y < -cv3->z * margin_y) continue;
             if (cv1->y > cv1->z * margin_y && cv2->y > cv2->z * margin_y && cv3->y > cv3->z * margin_y) continue;
-
-            // 5. RECALCULATE DEPTH AND PUSH TO RENDERER
+            // 1. Keep Z-axis for perfect Painter's Algorithm sorting
             clipped[n].avg_depth = (cv1->z + cv2->z + cv3->z) / 3.0f;
-            float fog_density = 0.2f; // the "FOG FACTOR"
-            float fog_factor = exp(-clipped[n].avg_depth * fog_density);
 
+            // 2. Calculate Radial Distance locally for the fog
+            real center_x = (cv1->x + cv2->x + cv3->x) / 3.0f;
+            real center_y = (cv1->y + cv2->y + cv3->y) / 3.0f;
+            real center_z = clipped[n].avg_depth; 
+
+            real radial_distance = sqrtf((center_x * center_x) + 
+                                        (center_y * center_y) + 
+                                        (center_z * center_z));
+
+            // 3. Apply the fog using the spherical radial distance
+            real fog_density = 0.02f;
+            real fog_factor = exp(-radial_distance * fog_density);
+            //if(fog_factor < 0.001f)continue;//Discard triangles that are "far away"
             // Clamp it so it doesn't go crazy
             if (fog_factor < 0.0f) fog_factor = 0.0f;
             if (fog_factor > 1.0f) fog_factor = 1.0f;
@@ -187,6 +196,8 @@ size_t sync_scene(scene_t *scene){
             scene->render_usage[visible].color.r *= light * fog_factor;
             scene->render_usage[visible].color.g *= light * fog_factor;
             scene->render_usage[visible].color.b *= light * fog_factor;
+            scene->render_usage[visible].dprod = dot;
+
             
             visible++;
         }
@@ -201,21 +212,53 @@ SDL_Vertex vec4tovert(vec4_t *vec, SDL_FColor color){
     vert.position = vec4_to_screen_fpoint(vec);
     return vert;
 }
+void render_triangle_wireframe(SDL_Renderer* renderer, SDL_Vertex v1, SDL_Vertex v2) {
+    SDL_SetRenderDrawColorFloat(renderer, 0.0f, 1.0f, 0.0f, 1.0f);
+    SDL_FPoint contour_points[2] = {
+        v1.position,
+        v2.position,
+    };
+
+    SDL_RenderLines(renderer, contour_points, 2);
+}
 void fill_verts(scene_t *scene, size_t visible){
     size_t vert_index = 0;
     for(size_t i = 0; i < visible; i++){
         uint32_t tri_idx = scene->indices[i];
         triangle_t *tri = &scene->render_usage[tri_idx];
-
-        scene->verts[vert_index++] = vec4tovert(tri->camera_positions[0], tri->color);
-        scene->verts[vert_index++] = vec4tovert(tri->camera_positions[1], tri->color);
-        scene->verts[vert_index++] = vec4tovert(tri->camera_positions[2], tri->color);
+        SDL_Vertex v1 = vec4tovert(tri->camera_positions[0], tri->color);
+        SDL_Vertex v2 = vec4tovert(tri->camera_positions[1], tri->color);
+        SDL_Vertex v3 = vec4tovert(tri->camera_positions[2], tri->color);
+        scene->verts[vert_index++] = v1;
+        scene->verts[vert_index++] = v2;
+        scene->verts[vert_index++] = v3;
     }
 }
-bool render_scene(scene_t *scene, SDL_Renderer *renderer){
+bool render_scene(scene_t *scene, SDL_Renderer *renderer, bool wireframe){
     size_t visible = sync_scene(scene);
-    if(visible == 0)return false;
-    fill_verts(scene, visible);
-    if(!SDL_RenderGeometry(renderer, NULL, scene->verts, visible * 3, NULL, 0))return false;
+    if(visible == 0) return false;
+    
+    fill_verts(scene, visible); 
+    
+    // 2. Draw the solid geometry FIRST
+    if(!SDL_RenderGeometry(renderer, NULL, scene->verts, visible * 3, NULL, 0)) return false;
+    
+    // 3. Draw the outlines ON TOP
+    if(wireframe){
+        for(size_t i = 0; i < visible; i++){
+            triangle_t *tri = &scene->render_usage[scene->indices[i]];
+            if(tri->dprod <= 0.5f && tri->dprod >= -0.5f){
+                SDL_Vertex v1 = vec4tovert(tri->camera_positions[0], tri->color);
+                SDL_Vertex v2 = vec4tovert(tri->camera_positions[1], tri->color);
+                SDL_Vertex v3 = vec4tovert(tri->camera_positions[2], tri->color);
+                
+                // Draw all 3 lines to complete the contour
+                render_triangle_wireframe(renderer, v1, v2);
+                render_triangle_wireframe(renderer, v2, v3);
+                render_triangle_wireframe(renderer, v3, v1);
+            }
+        }
+    }
+    
     return true;
 }
