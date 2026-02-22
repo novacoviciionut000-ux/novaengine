@@ -21,6 +21,7 @@ typedef struct{
     uint32_t *temp_indices;
     SDL_Vertex* verts;//this is not used anywhere else but the rendering
     size_t allocated_triangles;
+    vec4_t *star_field;
 }scene_t;
 void remove_entity_by_ptr(scene_t *scene, entity_t *target);
 void _patch_scene_after_removal(scene_t *scene, size_t start_offset, size_t triangle_count);

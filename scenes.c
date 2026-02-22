@@ -22,10 +22,10 @@ scene_t *create_scene() {
     scene->transient_buffer = calloc(scene->allocated_triangles * 2 * 3, sizeof(vec4_t));
     scene->indices = calloc(scene->allocated_triangles * 2, sizeof(uint32_t));
     scene->temp_indices = calloc(scene->allocated_triangles * 2, sizeof(uint32_t));
-
+    scene->star_field = calloc(NUM_STARS , sizeof(vec4_t));
     // Simple one-time check for all allocations
     if(!scene->entities || !scene->triangles || !scene->render_usage || 
-       !scene->verts || !scene->transient_buffer || !scene->indices || !scene->temp_indices) {
+       !scene->verts || !scene->transient_buffer || !scene->indices || !scene->temp_indices || !scene->star_field) {
         if(scene -> entities)free(scene->entities);
         if(scene -> triangles)free(scene->triangles);
         if(scene->render_usage)free(scene->render_usage);
@@ -33,6 +33,7 @@ scene_t *create_scene() {
         if(scene->transient_buffer)free(scene->transient_buffer);
         if(scene->indices)free(scene->indices);
         if(scene->temp_indices)free(scene->temp_indices);
+        if(scene->star_field)free(scene->star_field);
         return NULL;
     }
 
@@ -157,7 +158,7 @@ void destroy_scene(scene_t *scene) {
     free(scene->transient_buffer);
     free(scene->indices);
     free(scene->temp_indices);
-
+    free(scene->star_field);
     // 4. Finally, free the scene struct itself
     free(scene);
 }
