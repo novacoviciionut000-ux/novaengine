@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "timers.h"
 #include "rendering.h"
+#include "physics.h"
 #include "handle_input.h"
 #include "scenes.h"
 #include "obj_parsing.h"

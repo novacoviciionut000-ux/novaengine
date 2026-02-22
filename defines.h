@@ -5,17 +5,15 @@
 #include <stdint.h>
 #include <SDL3/SDL.h>
 
-#define SCREEN_WIDTH 1440
+#define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
 #define ANGULAR_VELOCITY 0.01f
 #define SENSITIVITY 0.01f
 #define NUM_STARS 500
 #define WORLD_SCALE_FACTOR 50.0f
-#define FOCAL 400
-
+#define JUMP_POWER 2.0f
 typedef float real;
 
-// --- 1. Primitive Math Types (Must be first) ---
 typedef struct {
     union {
         struct { real x, y, z; };
@@ -74,6 +72,9 @@ typedef struct {
     collisionbox_t *collision_box;
     real speed;
     real angular_speed;
+    vec4_t force_accumulator;
+    vec4_t acceleration;
+    real mass;
     eulerangles_t angles; 
     SDL_FColor color; 
 } entity_t;
@@ -94,7 +95,11 @@ typedef struct {
 typedef struct {
     vec4_t pos;
     eulerangles_t angles;
+    vec4_t velocity;
+    bool sprinting;
+    real focal_length;
     real speed;
+    real mass;
     real angular_speed;
     real radius;
     uint8_t grounded; 
@@ -126,7 +131,6 @@ typedef struct{
     delta_timer* timer;
     double curr_time;
 }real_timer;
-// --- 6. Math Functions (Must be last) ---
-// Now alg.h can safely use vec4_t, mat4_t, etc.
+
 
 #endif

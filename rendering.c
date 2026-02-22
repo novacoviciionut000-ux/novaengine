@@ -43,7 +43,7 @@ void draw_stars(SDL_Renderer *renderer, const camera_t *cam, scene_t *scene) {
         // 3. Since stars have no translation, rotated.z is their actual depth
         if (rotated.z > 0.1f) {
             // Project the star into screen coordinates
-            SDL_FPoint screen_pos = vec4_to_screen_fpoint(&rotated);
+            SDL_FPoint screen_pos = vec4_to_screen_fpoint(&rotated, cam->focal_length);
             
             if (screen_pos.x >= 0 && screen_pos.x < SCREEN_WIDTH &&
                 screen_pos.y >= 0 && screen_pos.y < SCREEN_HEIGHT) {
@@ -193,13 +193,13 @@ real backfacecull(vec4_t *v1, vec4_t *v2, vec4_t *v3){
     return dotprod3(&normal, &view);
 }
 
-size_t sync_scene(scene_t *scene){
+size_t sync_scene(scene_t *scene,camera_t *cam){
     size_t visible = 0;
     scene->transient_count = 0;
     
     // Calculate margins once
-    const float margin_x = (SCREEN_WIDTH / 2.0f) / FOCAL;
-    const float margin_y = (SCREEN_HEIGHT / 2.0f) / FOCAL;
+    const float margin_x = (SCREEN_WIDTH / 2.0f) / cam->focal_length;
+    const float margin_y = (SCREEN_HEIGHT / 2.0f) / cam->focal_length;
 
     for(size_t i = 0; i < scene->numtriangles; i++){
         vec4_t *v1 = scene->triangles[i].camera_positions[0];
@@ -273,10 +273,10 @@ size_t sync_scene(scene_t *scene){
     return visible;
 }
 
-SDL_Vertex vec4tovert(vec4_t *vec, SDL_FColor color){
+SDL_Vertex vec4tovert(vec4_t *vec, SDL_FColor color,real focal_length){
     SDL_Vertex vert = {0};
     vert.color = color;
-    vert.position = vec4_to_screen_fpoint(vec);
+    vert.position = vec4_to_screen_fpoint(vec, focal_length);
     return vert;
 }
 
@@ -290,14 +290,14 @@ void render_triangle_wireframe(SDL_Renderer* renderer, SDL_Vertex v1, SDL_Vertex
     SDL_RenderLines(renderer, contour_points, 2);
 }
 
-void fill_verts(scene_t *scene, size_t visible){
+void fill_verts(scene_t *scene, size_t visible,real focal_length){
     size_t vert_index = 0;
     for(size_t i = 0; i < visible; i++){
         uint32_t tri_idx = scene->indices[i];
         triangle_t *tri = &scene->render_usage[tri_idx];
-        SDL_Vertex v1 = vec4tovert(tri->camera_positions[0], tri->color);
-        SDL_Vertex v2 = vec4tovert(tri->camera_positions[1], tri->color);
-        SDL_Vertex v3 = vec4tovert(tri->camera_positions[2], tri->color);
+        SDL_Vertex v1 = vec4tovert(tri->camera_positions[0], tri->color, focal_length);
+        SDL_Vertex v2 = vec4tovert(tri->camera_positions[1], tri->color, focal_length);
+        SDL_Vertex v3 = vec4tovert(tri->camera_positions[2], tri->color,focal_length);
         scene->verts[vert_index++] = v1;
         scene->verts[vert_index++] = v2;
         scene->verts[vert_index++] = v3;
@@ -305,12 +305,12 @@ void fill_verts(scene_t *scene, size_t visible){
 }
 
 bool render_scene(scene_t *scene, SDL_Renderer *renderer, bool wireframe, camera_t *cam){
-    size_t visible = sync_scene(scene);
+    size_t visible = sync_scene(scene, cam);
     SDL_SetRenderDrawColor(renderer, 0, 5, 0, 255); // Dark green void
     SDL_RenderClear(renderer);
     draw_stars(renderer, cam,scene);
     if(visible == 0) return false;
-    fill_verts(scene, visible); 
+    fill_verts(scene, visible, cam->focal_length); 
 
     
     // 2. Draw the solid geometry FIRST
@@ -321,9 +321,9 @@ bool render_scene(scene_t *scene, SDL_Renderer *renderer, bool wireframe, camera
         for(size_t i = 0; i < visible; i++){
             triangle_t *tri = &scene->render_usage[scene->indices[i]];
             if(tri->dprod <= 0.5f && tri->dprod >= -0.5f){
-                SDL_Vertex v1 = vec4tovert(tri->camera_positions[0], tri->color);
-                SDL_Vertex v2 = vec4tovert(tri->camera_positions[1], tri->color);
-                SDL_Vertex v3 = vec4tovert(tri->camera_positions[2], tri->color);
+                SDL_Vertex v1 = vec4tovert(tri->camera_positions[0], tri->color, cam->focal_length);
+                SDL_Vertex v2 = vec4tovert(tri->camera_positions[1], tri->color, cam->focal_length);
+                SDL_Vertex v3 = vec4tovert(tri->camera_positions[2], tri->color, cam->focal_length);
                 
                 // Draw all 3 lines to complete the contour
                 render_triangle_wireframe(renderer, v1, v2);

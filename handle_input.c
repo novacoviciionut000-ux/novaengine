@@ -10,8 +10,7 @@ input_state_t get_input(const uint8_t *keyboard_state){
     input.backward = keyboard_state[SDL_SCANCODE_S];
     return input;
 }
-vec4_t get_velocity_from_input(const input_state_t *input, camera_t *cam) {
-    vec4_t velocity = {0};
+void apply_input_to_camera(const input_state_t *input, camera_t *cam) {
     real yaw = -cam->angles.y;
 
     float forward_x = -sinf(yaw); 
@@ -19,33 +18,39 @@ vec4_t get_velocity_from_input(const input_state_t *input, camera_t *cam) {
 
     float right_x = cosf(yaw);
     float right_z = sinf(yaw);
-    // W and S: Move along the forward vector
-    // check if the camera is grounded on the x-axis
-    if(!((cam -> grounded) & 1) && !((cam -> grounded) & 0x2)){
+
+    // Use temporary variables for horizontal movement
+    float target_x = 0;
+    float target_z = 0;
+
+
+        // W and S: Move along the forward vector
         if (input->forward) {
-            velocity.x += forward_x * cam->speed;
-            velocity.z += forward_z * cam->speed;
+            target_x += forward_x * cam->speed;
+            target_z += forward_z * cam->speed;
         }
         if (input->backward) {
-            velocity.x -= forward_x * cam->speed;
-            velocity.z -= forward_z * cam->speed;
+            target_x -= forward_x * cam->speed;
+            target_z -= forward_z * cam->speed;
         }
 
         // A and D: Move along the right vector
         if (input->right) {
-            velocity.x += right_x * cam->speed;
-            velocity.z += right_z * cam->speed;
+            target_x += right_x * cam->speed;
+            target_z += right_z * cam->speed;
         }
         if (input->left) {
-            velocity.x -= right_x * cam->speed;
-            velocity.z -= right_z * cam->speed;
+            target_x -= right_x * cam->speed;
+            target_z -= right_z * cam->speed;
         }
-    }
+    
 
-    return velocity;
+    // Apply ONLY to X and Z, leaving Y completely untouched
+    cam->velocity.x = target_x;
+    cam->velocity.z = target_z;
 }
 //VERY IMPORTANT FUNCTION BELOW !!!!! This basically handles the entire game interactivity, it handles the input, it handles the camera movement, it handles the entity updates, it handles the world to camera space transformation, it basically does everything that is needed for the game to run
-void handle_event_and_delta(long deltaTime, bool *running,entity_t **entities, int entity_count, camera_t *cam, real dt){
+void handle_event_and_delta(long deltaTime, bool *running,scene_t *scene, camera_t *cam, real dt){
     SDL_Event event;
     while(SDL_PollEvent(&event)){
         if(event.type == SDL_EVENT_QUIT){
@@ -54,7 +59,7 @@ void handle_event_and_delta(long deltaTime, bool *running,entity_t **entities, i
         if(event.type == SDL_EVENT_MOUSE_MOTION){
 
             // Handle camera rotation here, we will need to pass the camera to this function, or we can just make the camera a global variable, which is not ideal but it is the easiest solution for now
-             handle_camera_rotation(cam, &event);
+            handle_camera_rotation(cam, &event);
             
         }
     }
@@ -62,10 +67,30 @@ void handle_event_and_delta(long deltaTime, bool *running,entity_t **entities, i
     if (keyboard_state[SDL_SCANCODE_ESCAPE]) {
         *running = false;
     }
+    if(keyboard_state[SDL_SCANCODE_SPACE]){
+        camera_jump(cam, -0.15f);
+    }
+    if(keyboard_state[SDL_SCANCODE_LSHIFT]){//!!!!TO BE SWAPPED FOR A SEPARATE FUNCTION, MAYBE SEPARATE HEADER (MOVEMENT.C)
+        if(!cam->sprinting){
+            cam->speed *= 3;
 
-    update_entities(entities, entity_count, dt);
+            cam->focal_length = 300;
+            cam->sprinting = true;
+
+        }
+    }else{
+        if(cam->sprinting){
+            cam->speed /=3;
+            cam->focal_length = 400;
+            cam->sprinting = false;
+
+        }
+
+
+    }
+    move_world_to_camera_space(cam, scene->entities, scene->numentities);
     handle_camera_translation(cam, keyboard_state, dt);
-
-    move_world_to_camera_space(cam, entities, entity_count);
+    update_scene_physics(scene, dt, cam);
+    update_entities(scene->entities, scene->numentities, dt);
     
 }

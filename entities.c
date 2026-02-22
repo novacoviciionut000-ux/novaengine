@@ -150,6 +150,8 @@ entity_t* create_entity(vec4_t pos, mesh_t *mesh){
     entity->angular_speed = 0.01f;
     entity->angles = (eulerangles_t){0,0,0};
     entity->collision_box = calloc(1, sizeof(collisionbox_t));
+    entity-> force_accumulator = (vec4_t){{{0,0,0,0}}};
+    entity -> acceleration = (vec4_t){{{0,0,0,0}}};
     if(!entity->collision_box){free(entity);return NULL;}
     *(entity->collision_box) = get_entity_collisionbox(entity);
     rotate_entity(entity);

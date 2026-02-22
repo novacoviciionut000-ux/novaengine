@@ -11,6 +11,10 @@ camera_t* create_camera(vec4_t pos, eulerangles_t angles, real speed, real angul
     cam->angular_speed = angular_speed;
     cam->angles = angles;
     cam->radius = 0.05f;
+    cam->sprinting = false;
+    cam->focal_length = 400;
+    cam->mass = 5.0f;
+    cam->velocity = (vec4_t){{{0,0,0,0}}};
     cam -> grounded = 0;
     return cam;
 }
@@ -37,22 +41,17 @@ real get_distance_to_closest_vertex(entity_t **entities, int num_entities){// th
     }
     return min;
 }
-void update_grounded(camera_t* cam, entity_t **entities, int numentities){//This had a camera parameter before, but it doesn't need it because the camera is always technically at {0,0,0} in the camera space.
-    cam -> grounded = 0;
-    real dist = get_distance_to_closest_vertex(entities, numentities);
-    if(dist <= 0.05f){
-        cam -> grounded |= 0x3;
-    }else{
-        cam -> grounded &= ~ 0x3;
 
-    }
+vec4_t get_camera_velocity(camera_t *cam,const uint8_t *keyboard_state, real dt){
+    input_state_t input = get_input(keyboard_state);
+
+    apply_input_to_camera(&input, cam);
+    vec4_t total_translation = scale_vec4(cam->velocity, dt * WORLD_SCALE_FACTOR);
+    return total_translation;
 }
 void handle_camera_translation(camera_t *cam, const uint8_t *keyboard_state, real dt){
-    vec4_t velocity = {0};
-    input_state_t input = get_input(keyboard_state);
-    velocity = get_velocity_from_input(&input, cam);
-    vec4_t total_translation = scale_vec4(velocity, dt * WORLD_SCALE_FACTOR);
-    cam->pos = add_vec4(&cam->pos, &total_translation);
+    vec4_t camera_vel = get_camera_velocity(cam, keyboard_state, dt);
+    cam->pos = add_vec4(&cam->pos, &camera_vel);
 }
 void move_world_to_camera_space(const camera_t *cam, entity_t **entities, int entity_count){
     mat4_t rotation = mat4_identity();

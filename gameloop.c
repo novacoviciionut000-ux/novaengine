@@ -7,7 +7,11 @@ bool initializeGame(SDL_Window** window, SDL_Renderer** renderer) {
         return false;
     }
 
-    *window = SDL_CreateWindow("Game Loop", SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+    *window = SDL_CreateWindow("Game Loop", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS);    
+    if (*window) {
+        // 2. Explicitly center it in SDL3
+        SDL_SetWindowPosition(*window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    }
     if (*window == NULL) {
         printf("Could not create window: %s\n", SDL_GetError());
         return false;
@@ -59,7 +63,7 @@ void gameLoop(){
     bunny -> dirty = true;
         myCube2 -> color = (SDL_FColor){3.0f,0.0f,1.0f,1.0f};
         myCube2 -> angular_velocity = (vec4_t){{{0.0f, 0.01f,0.0f,0.0f}}};
-    cam = create_camera((vec4_t){{{.x=0, .y=0, .z=0, .w=FOCAL}}}, (eulerangles_t){.x=0, .y=0, .z=0}, 0.01f, 0.01f);
+    cam = create_camera((vec4_t){{{.x=0, .y=0, .z=0, .w=1}}}, (eulerangles_t){.x=0, .y=0, .z=0}, 0.01f, 0.01f);
     if(!cam){
         printf("Failed to create camera\n");
         goto CLEANUP;
@@ -70,7 +74,7 @@ void gameLoop(){
     long lastTime = SDL_GetTicks();
     while(running){
         dt = delta_time(timer);
-        handle_event_and_delta(deltaTime, &running,scene->entities, scene->numentities, cam, dt);
+        handle_event_and_delta(deltaTime, &running,scene, cam, dt);
         
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);

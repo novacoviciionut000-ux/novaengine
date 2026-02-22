@@ -86,6 +86,8 @@ entity_t *get_obj(char *pathname, vec4_t position,SDL_FColor color){
     obj -> color = color;
     obj->dirty = true;
     *(obj -> collision_box) = get_entity_collisionbox(obj);
+    obj-> force_accumulator = (vec4_t){{{0,0,0,0}}};
+    obj -> acceleration = (vec4_t){{{0,0,0,0}}};
     fclose(file);
 
     rotate_entity(obj);
