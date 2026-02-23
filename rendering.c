@@ -58,7 +58,7 @@ void draw_stars(SDL_Renderer *renderer, const camera_t *cam, scene_t *scene) {
 vec4_t* intersect(vec4_t *p1, vec4_t *p2, frustum_plane_t plane, float margin_x, float margin_y, scene_t *scene) {
     float t = 0;
     switch (plane) {
-        case PLANE_NEAR:   t = (0.1f - p1->z) / (p2->z - p1->z); break;
+        case PLANE_NEAR:   t = (0.01f - p1->z) / (p2->z - p1->z); break;
         case PLANE_LEFT:   t = (-p1->z * margin_x - p1->x) / ((p2->x - p1->x) + (p2->z - p1->z) * margin_x); break;
         case PLANE_RIGHT:  t = ( p1->z * margin_x - p1->x) / ((p2->x - p1->x) - (p2->z - p1->z) * margin_x); break;
         case PLANE_TOP:    t = ( p1->z * margin_y - p1->y) / ((p2->y - p1->y) - (p2->z - p1->z) * margin_y); break;
@@ -208,7 +208,7 @@ size_t sync_scene(scene_t *scene,camera_t *cam){
         
         // 1. BACKFACE CULL FIRST
         real dot = backfacecull(v1, v2, v3);
-        if(dot < 0.01f) continue;
+        if(dot <= -0.01f) continue;
         if (is_triangle_outside(v1, v2, v3, margin_x, margin_y)) continue; // if the triangle is outside, there is no point of running the math.
         
         real intensity = dot;

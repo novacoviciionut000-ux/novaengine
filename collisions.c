@@ -65,8 +65,9 @@ void handle_cam_collision(camera_t *cam, entity_t *entity) {
 }
 
 void handle_and_check_collision(scene_t *scene, camera_t *cam) {
-    real check_treshold = 50.0f;
+    real check_treshold = 50.0f;// this is to be swapped for the "beefiest" collisionbox in the game
     for (int i = 0; i < scene->numentities; i++) {
+        if(scene->entities[i]->collision_box == NULL)continue;
         real dx = scene->entities[i]->pos.x - cam->pos.x;//this is an optimization.Basically, if the entity is far away, there is no point in checking it's collision
         real dy = scene->entities[i]->pos.y - cam->pos.y;
         real dz = scene->entities[i]->pos.z - cam->pos.z;

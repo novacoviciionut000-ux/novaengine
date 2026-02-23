@@ -73,6 +73,7 @@ typedef struct {
     real speed;
     real angular_speed;
     vec4_t force_accumulator;
+    bool collidable;
     vec4_t acceleration;
     real mass;
     eulerangles_t angles; 

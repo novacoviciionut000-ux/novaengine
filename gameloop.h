@@ -10,6 +10,7 @@
 #include "physics.h"
 #include "handle_input.h"
 #include "scenes.h"
+#include "gun.h"
 #include "obj_parsing.h"
 bool initializeGame(SDL_Window** window, SDL_Renderer** renderer);
 void gameLoop();

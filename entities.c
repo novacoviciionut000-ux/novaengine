@@ -51,7 +51,8 @@ void update_entity(entity_t *entity, real dt){
     }
     if(entity->dirty){
         rotate_entity(entity);
-        *(entity->collision_box) = get_entity_collisionbox(entity);
+        if(entity->collision_box != NULL)
+            *(entity->collision_box) = get_entity_collisionbox(entity);
     }
 
 }
@@ -152,6 +153,7 @@ entity_t* create_entity(vec4_t pos, mesh_t *mesh){
     entity->collision_box = calloc(1, sizeof(collisionbox_t));
     entity-> force_accumulator = (vec4_t){{{0,0,0,0}}};
     entity -> acceleration = (vec4_t){{{0,0,0,0}}};
+    entity->collidable = true;
     if(!entity->collision_box){free(entity);return NULL;}
     *(entity->collision_box) = get_entity_collisionbox(entity);
     rotate_entity(entity);
