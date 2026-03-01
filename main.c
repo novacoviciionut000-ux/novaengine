@@ -1,6 +1,6 @@
 #include "alg.h"
 #include "gameloop.h"
-int main(int argc, char* argv[]) {
+int main(void) {
     gameLoop();
     return 0;
 }

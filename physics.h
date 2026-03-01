@@ -9,5 +9,5 @@ void apply_impulse_to_camera(camera_t *cam, vec4_t impulse);
 void camera_jump(camera_t *cam, real jump_power);
 void apply_camera_gravity(camera_t *cam, real gravity_pull, real dt);
 void update_entity_physics(entity_t *entity, float dt);
-void update_scene_physics(scene_t *scene, float dt,camera_t *cam);
+void update_scene_physics(entity_manager_t *manager, float dt,camera_t *cam);
 #endif

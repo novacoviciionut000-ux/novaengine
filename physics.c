@@ -1,6 +1,6 @@
 #include "physics.h"
-
-#define gravity 1.2f
+// THIS IS INCOMPLETE !!! NEEDS SERIOUS DEBUGGING
+#define gravity 0.4f
 void apply_impulse(entity_t *entity, vec4_t impulse) {
     // Delta V = Impulse / Mass
     vec4_t delta_v = scale_vec4(impulse, 1.0f / entity->mass);
@@ -70,11 +70,11 @@ void update_entity_physics(entity_t *entity, float dt) {
     entity->pos = add_vec4(&entity->pos, &tmp2);
 
     // 6. Reset Forces for next frame
-    entity->force_accumulator = (vec4_t){0, 0, 0, 0};
+    entity->force_accumulator = (vec4_t){{{0, 0, 0, 0}}};
 }
-void update_scene_physics(scene_t *scene, float dt,camera_t *cam){
+void update_scene_physics(entity_manager_t *manager, float dt,camera_t *cam){
     //for(int i = 0; i<scene->numentities;i++){
-        //update_entity_physics(scene->entities[i], dt);
+        //update_entity_physics(manager->entities[i], dt);
     //}
     apply_camera_gravity(cam, gravity, dt);
 

@@ -7,6 +7,7 @@ delta_timer* initialize_time(){
     uint64_t freq = SDL_GetPerformanceFrequency();//the frequency does not change, ever.
     timer->start = start;
     timer->freq = freq;
+    
     return timer;
 }
 

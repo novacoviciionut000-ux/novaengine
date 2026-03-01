@@ -2,7 +2,7 @@
 # Compiler settings
 CC = gcc
 # -MMD -MP generates dependency (.d) files automatically
-CFLAGS = -Wall -Wextra -O2 -std=gnu99 -MMD -MP 
+CFLAGS = -Wall -Wextra -O3 -std=gnu99 -MMD -MP -msse4.1 -march=native -mfpmath=sse -ffast-math -funroll-loops -fvisibility=hidden
 LIBS = -lm -lSDL3
 
 # Targets
@@ -10,7 +10,7 @@ TARGET = main
 TEST_TARGET = test
 
 # Source files (Removed squares.c)
-SOURCES = main.c alg.c gameloop.c entities.c handle_input.c projection_math.c camera.c rendering.c obj_parsing.c scenes.c timers.c collisions.c physics.c gun.c
+SOURCES = main.c alg.c gameloop.c entities.c handle_input.c projection_math.c camera.c rendering.c obj_parsing.c scenes.c timers.c collisions.c physics.c gun.c pipeline.c particles.c enemy.c
 TEST_SOURCES = test.c alg.c
 
 # Object files (Automatically generated from SOURCES)

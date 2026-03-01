@@ -15,6 +15,7 @@ void rotate_entity(entity_t *entity);
 void add_angular_velocity(eulerangles_t *angles, vec4_t angular_velocity, real dt);
 void free_entity(entity_t *entity);
 SDL_Vertex* vec4tovertex(entity_t *entity);
+void on_hit_entity(entity_t *entity, real dt);
 bool isZero_vec(vec4_t vecA);
 int* create_cube_triangles();
 void update_entity(entity_t *entity, real dt);

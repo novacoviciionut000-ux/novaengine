@@ -1,6 +1,8 @@
 #include "entities.h"
 
-
+void on_hit_entity(entity_t *entity, real dt){
+    printf("Hit entity\n");
+}
 void rotate_entity(entity_t *entity){
     mat4_t id = mat4_identity();
     mat4_t m_rot_z = rot_z(&id, entity->angles.z, true);
@@ -14,14 +16,14 @@ void rotate_entity(entity_t *entity){
             vec4_t world_pos = add_vec4(&rotated, &entity->pos);
             entity->mesh->world_verts[i] = world_pos;
 
-        
+
 
     }
     entity->dirty = false;
 
 }
 bool isZero_vec(vec4_t vecA){
-    if(vecA.x <= 0.001f && vecA.y <= 0.001f && vecA.z <= 0.001f)return true;
+    if(fabsf(vecA.x) <= 0.00001f && fabsf(vecA.y) <= 0.00001f && fabsf(vecA.z) <= 0.00001f)return true;
     return false;
 }
 void add_angular_velocity(eulerangles_t *angles, vec4_t angular_velocity, real dt){
@@ -50,9 +52,16 @@ void update_entity(entity_t *entity, real dt){
         entity->dirty = true;
     }
     if(entity->dirty){
-        rotate_entity(entity);
-        if(entity->collision_box != NULL)
-            *(entity->collision_box) = get_entity_collisionbox(entity);
+        if(!entity->HUD){
+            rotate_entity(entity);
+            if(entity->collision_box != NULL)
+                *(entity->collision_box) = get_entity_collisionbox(entity->mesh);
+        }
+    }
+    if(entity->collision_box == NULL)return;
+    if(entity->collision_box->hit){
+        entity->on_hit(entity, dt);
+        entity->collision_box->hit = false;
     }
 
 }
@@ -66,7 +75,7 @@ void free_entity(entity_t *entity){
 
     free(entity->mesh->local_verts);
     free(entity->mesh->world_verts);
-    free(entity->mesh->triangle_map);    
+    free(entity->mesh->triangle_map);
     free(entity->mesh->camera_verts);
     free(entity->mesh);
     free(entity->collision_box);
@@ -76,22 +85,22 @@ int* create_cube_triangles(){
     int* triangle_map = malloc(36 * sizeof(int));
     int cube_triangle_map[] = {
             // Front Face
-            0, 1, 5,    0, 5, 4, 
-            
+            0, 1, 5,    0, 5, 4,
+
             // Right Face
             1, 2, 6,    1, 6, 5,
-            
+
             // Back Face
             2, 3, 7,    2, 7, 6,
-            
+
             // Left Face
             3, 0, 4,    3, 4, 7,
-            
+
             // Top Face
             4, 5, 6,    4, 6, 7,
-            
+
             // Bottom Face
-            3, 2, 1,    3, 1, 0  
+            3, 2, 1,    3, 1, 0
         };
     for(int i = 0; i < 36; i++) triangle_map[i] = cube_triangle_map[i];
     return triangle_map;
@@ -155,7 +164,7 @@ entity_t* create_entity(vec4_t pos, mesh_t *mesh){
     entity -> acceleration = (vec4_t){{{0,0,0,0}}};
     entity->collidable = true;
     if(!entity->collision_box){free(entity);return NULL;}
-    *(entity->collision_box) = get_entity_collisionbox(entity);
+    *(entity->collision_box) = get_entity_collisionbox(entity->mesh);
     rotate_entity(entity);
     return entity;
 }
@@ -167,11 +176,8 @@ entity_t* create_cube_entity(vec4_t pos, real length, real width, real height){
         if(local_verts)free(local_verts);
         if(triangle_map)free(triangle_map);
         return NULL;
-    }  
+    }
     mesh_t* cube_mesh = create_mesh(local_verts, 8,12,triangle_map);
     entity_t* cube_entity = create_entity(pos, cube_mesh);
     return cube_entity;
 }
-
-
-//To do: OBJ loader / parser, so that we can easily add new entities without hardcoding their vertices and indices in the code, we can just create a .obj file for the entity and load it at runtime, this will also allow us to use more complex models without having to manually define all the vertices and indices in the code, which is very error-prone and time-consuming, especially for complex models with hundreds or thousands of vertices and indices

@@ -1,0 +1,22 @@
+# blood.obj
+# 6 vertices, 8 triangles (Stretched Diamond/Droplet)
+
+# Vertices
+v 0.000 0.200 0.000
+v 0.000 -0.200 0.000
+v -0.100 0.000 0.100
+v 0.100 0.000 0.100
+v 0.100 0.000 -0.100
+v -0.100 0.000 -0.100
+
+# Faces (Top Half)
+f 1 3 4
+f 1 4 5
+f 1 5 6
+f 1 6 3
+
+# Faces (Bottom Half)
+f 2 4 3
+f 2 5 4
+f 2 6 5
+f 2 3 6

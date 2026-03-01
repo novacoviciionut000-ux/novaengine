@@ -1,0 +1,39 @@
+# Low poly bullet
+# 8 vertices, 10 faces
+
+o bullet
+
+# Base circle (4 verts)
+v  0.05  0.0   0.05
+v -0.05  0.0   0.05
+v -0.05  0.0  -0.05
+v  0.05  0.0  -0.05
+
+# Mid circle (4 verts, slightly smaller)
+v  0.04  0.12  0.04
+v -0.04  0.12  0.04
+v -0.04  0.12 -0.04
+v  0.04  0.12 -0.04
+
+# Tip
+v  0.0   0.22  0.0
+
+# Base cap
+f 1 2 3
+f 1 3 4
+
+# Sides (cylinder body)
+f 1 2 6
+f 1 6 5
+f 2 3 7
+f 2 7 6
+f 3 4 8
+f 3 8 7
+f 4 1 5
+f 4 5 8
+
+# Tip (nose cone)
+f 5 6 9
+f 6 7 9
+f 7 8 9
+f 8 5 9

@@ -1,73 +1,48 @@
 #include "handle_input.h"
 #include "camera.h"
-//kind of a "constructor" thingy
-camera_t* create_camera(vec4_t pos, eulerangles_t angles, real speed, real angular_speed){
-    camera_t* cam = calloc(1,sizeof(camera_t));
-    if(!cam){
-        return NULL;
-    }
-    cam->pos = pos;
-    cam->speed = speed;
+
+camera_t* create_camera(vec4_t pos, eulerangles_t angles, real speed, real angular_speed) {
+    camera_t* cam = calloc(1, sizeof(camera_t));
+    if(!cam) return NULL;
+    cam->pos           = pos;
+    cam->speed         = speed;
     cam->angular_speed = angular_speed;
-    cam->angles = angles;
-    cam->radius = 0.05f;
-    cam->sprinting = false;
-    cam->focal_length = 400;
-    cam->mass = 5.0f;
-    cam->velocity = (vec4_t){{{0,0,0,0}}};
-    cam -> grounded = 0;
+    cam->angles        = angles;
+    cam->radius        = 0.03f;
+    cam->sprinting     = false;
+    cam->focal_length  = 400;
+    cam->mass          = 5.0f;
+    cam->velocity      = (vec4_t){{{0,0,0,0}}};
+    cam -> health = 100;
+    cam->grounded      = 0;
     return cam;
 }
-void handle_camera_rotation(camera_t *cam, const SDL_Event *event){
-    if(event->type == SDL_EVENT_MOUSE_MOTION){
+
+void handle_camera_rotation(camera_t *cam, const SDL_Event *event) {
+    if(event->type == SDL_EVENT_MOUSE_MOTION) {
         cam->angles.y += event->motion.xrel * SENSITIVITY;
-        cam -> angles.x += event->motion.yrel * SENSITIVITY;
-        // Clamp the pitch to prevent flipping
-        cam->angles.x = cam->angles.x>M_PIdiv2?M_PIdiv2:cam->angles.x;
-        cam->angles.x = cam->angles.x<-M_PIdiv2?-M_PIdiv2:cam->angles.x;
-
+        cam->angles.x += event->motion.yrel * SENSITIVITY;
+        cam->angles.x = cam->angles.x >  M_PIdiv2 ?  M_PIdiv2 : cam->angles.x;//Gimbal lock prevention
+        cam->angles.x = cam->angles.x < -M_PIdiv2 ? -M_PIdiv2 : cam->angles.x;
     }
 }
+void draw_damage_vignette(SDL_Renderer *renderer, camera_t *camera, real max_health) {
+    real hp_ratio = camera->health / max_health;
+    if (hp_ratio >= 1.0f) return;  // full health, skip
 
-real get_distance_to_closest_vertex(entity_t **entities, int num_entities){// this will need to be changed into two functions, one that calculated for x axis, and z-axis respectively.
-    //we use the pythagorean theorem on each vertex
-    real min = 100;
-    vec4_t origin = {{{0,0,0,0}}};
-    for(int i = 0 ; i < num_entities;i++){
-        for(int j = 0; j < entities[i]->mesh->vertex_count;j++){
-            real dist = get_distance(&entities[i]->mesh->camera_verts[j], &(origin));
-            if(dist < min) min = dist;
-        }
-    }
-    return min;
+    uint8_t alpha = (uint8_t)((1.0f - hp_ratio) * 60.0f);  // max 180/255 alpha
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, alpha);
+    SDL_RenderFillRect(renderer, NULL);  // NULL = full screen
 }
-
-vec4_t get_camera_velocity(camera_t *cam,const uint8_t *keyboard_state, real dt){
+vec4_t get_camera_velocity(camera_t *cam, const uint8_t *keyboard_state, real dt) {
     input_state_t input = get_input(keyboard_state);
-
     apply_input_to_camera(&input, cam);
-    vec4_t total_translation = scale_vec4(cam->velocity, dt * WORLD_SCALE_FACTOR);
-    return total_translation;
+    return scale_vec4(cam->velocity, dt * WORLD_SCALE_FACTOR);
 }
-void handle_camera_translation(camera_t *cam, const uint8_t *keyboard_state, real dt){
+
+void handle_camera_translation(camera_t *cam, const uint8_t *keyboard_state, real dt) {
     vec4_t camera_vel = get_camera_velocity(cam, keyboard_state, dt);
     cam->pos = add_vec4(&cam->pos, &camera_vel);
 }
-void move_world_to_camera_space(const camera_t *cam, entity_t **entities, int entity_count){
-    mat4_t rotation = mat4_identity();
-    rotation = rot_x(&rotation, cam->angles.x, true);
-    rotation = rot_y(&rotation, -cam->angles.y, true);
-    //rotation = rot_x(&rotation, -cam->angles.x, true);
-
-    for(int i = 0; i < entity_count;i++){
-        for(int j = 0; j < entities[i]->mesh->vertex_count; j++){
-
-            // Translate the world vertex by the inverse of the camera position
-            vec4_t translated = add_vec4(&entities[i]->mesh->world_verts[j], &(vec4_t){.x=-cam->pos.x, .y=-cam->pos.y, .z=-cam->pos.z, .w=0});
-            // Rotate the translated vertex by the inverse of the camera rotation
-            entities[i]->mesh->camera_verts[j] = apply_transform(&rotation, &translated);
-        }
-    }
-
-}
-
