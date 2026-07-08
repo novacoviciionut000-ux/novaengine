@@ -1,0 +1,183 @@
+#include "entities.h"
+
+void on_hit_entity(entity_t *entity, real dt){
+    printf("Hit entity\n");
+}
+void rotate_entity(entity_t *entity){
+    mat4_t id = mat4_identity();
+    mat4_t m_rot_z = rot_z(&id, entity->angles.z, true);
+    mat4_t m_rot_y = rot_y(&m_rot_z, entity->angles.y, true);
+    mat4_t final_matrix = rot_x(&m_rot_y, entity->angles.x, true);
+    for(int i = 0; i < entity->mesh->vertex_count; i++){
+        // A. Rotate (from Local Storage)
+            vec4_t rotated = apply_transform(&final_matrix, &entity->mesh->local_verts[i]);
+
+            // B. Translate (Add Position)
+            vec4_t world_pos = add_vec4(&rotated, &entity->pos);
+            entity->mesh->world_verts[i] = world_pos;
+
+
+
+    }
+    entity->dirty = false;
+
+}
+bool isZero_vec(vec4_t vecA){
+    if(fabsf(vecA.x) <= 0.00001f && fabsf(vecA.y) <= 0.00001f && fabsf(vecA.z) <= 0.00001f)return true;
+    return false;
+}
+void add_angular_velocity(eulerangles_t *angles, vec4_t angular_velocity, real dt){
+    angles->x += angular_velocity.x * dt * WORLD_SCALE_FACTOR;
+    angles->y += angular_velocity.y * dt * WORLD_SCALE_FACTOR;
+    angles->z += angular_velocity.z * dt * WORLD_SCALE_FACTOR;
+}
+void update_collisionbox(entity_t *entity, vec4_t *velocity){
+    entity->collision_box->min_x += velocity->x;
+    entity->collision_box->max_x += velocity->x;
+    entity-> collision_box->min_y += velocity->y;
+    entity->collision_box->max_y += velocity->y;
+    entity->collision_box->min_z += velocity->z;
+    entity->collision_box->max_z += velocity->z;
+}
+void update_entity(entity_t *entity, real dt){
+
+    if(!isZero_vec(entity->velocity)){
+        vec4_t total_translation = scale_vec4(entity->velocity, dt * WORLD_SCALE_FACTOR);
+        entity->pos = add_vec4(&entity->pos, &(total_translation));
+        entity->dirty = true;
+        update_collisionbox(entity, &total_translation);
+    }
+    if(!isZero_vec(entity->angular_velocity)){
+        add_angular_velocity(&entity->angles, entity->angular_velocity, dt);
+        entity->dirty = true;
+    }
+    if(entity->dirty){
+        if(!entity->HUD){
+            rotate_entity(entity);
+            if(entity->collision_box != NULL)
+                *(entity->collision_box) = get_entity_collisionbox(entity->mesh);
+        }
+    }
+    if(entity->collision_box == NULL)return;
+    if(entity->collision_box->hit){
+        entity->on_hit(entity, dt);
+        entity->collision_box->hit = false;
+    }
+
+}
+void update_entities(entity_t **entities, int entity_count, real dt){
+    for(int i = 0; i < entity_count; i++){
+        update_entity(entities[i], dt);
+    }
+}
+
+void free_entity(entity_t *entity){
+
+    free(entity->mesh->local_verts);
+    free(entity->mesh->world_verts);
+    free(entity->mesh->triangle_map);
+    free(entity->mesh->camera_verts);
+    free(entity->mesh);
+    free(entity->collision_box);
+    free(entity);
+}
+int* create_cube_triangles(){
+    int* triangle_map = malloc(36 * sizeof(int));
+    int cube_triangle_map[] = {
+            // Front Face
+            0, 1, 5,    0, 5, 4,
+
+            // Right Face
+            1, 2, 6,    1, 6, 5,
+
+            // Back Face
+            2, 3, 7,    2, 7, 6,
+
+            // Left Face
+            3, 0, 4,    3, 4, 7,
+
+            // Top Face
+            4, 5, 6,    4, 6, 7,
+
+            // Bottom Face
+            3, 2, 1,    3, 1, 0
+        };
+    for(int i = 0; i < 36; i++) triangle_map[i] = cube_triangle_map[i];
+    return triangle_map;
+}
+vec4_t* create_cube_local_vertices(real length, real width, real height){
+    vec4_t* local_verts = malloc(8 * sizeof(vec4_t));
+    real half_length = length / 2.0;
+    real half_width = width / 2.0;
+    real half_height = height / 2.0;
+    //bottom face
+    local_verts[0] = (vec4_t){.x=-half_length, .y=-half_width, .z=half_height, .w=1}; //front left
+    local_verts[1] = (vec4_t){.x=half_length, .y=-half_width, .z=half_height, .w=1}; //front right
+    local_verts[2] = (vec4_t){.x=half_length, .y=-half_width, .z=-half_height, .w=1}; //back right
+    local_verts[3] = (vec4_t){.x=-half_length, .y=-half_width, .z=-half_height, .w=1}; //back left
+    //top face
+    local_verts[4] = (vec4_t){.x=-half_length, .y=half_width, .z=half_height, .w=1}; //front left
+    local_verts[5] = (vec4_t){.x=half_length, .y=half_width, .z=half_height, .w=1}; //front right
+    local_verts[6] = (vec4_t){.x=half_length, .y=half_width, .z=-half_height, .w=1}; //back right
+    local_verts[7] = (vec4_t){.x=-half_length, .y=half_width, .z=-half_height, .w=1}; //back left
+
+    return local_verts;
+}
+
+mesh_t* create_mesh(vec4_t *local_verts, int num_verts, int triangle_count, int* triangle_map){
+    mesh_t *mesh = calloc(1,sizeof(mesh_t));
+    mesh->local_verts = local_verts;
+    mesh->world_verts = calloc(num_verts , sizeof(vec4_t));
+    if(mesh->world_verts == NULL){
+        free(mesh);
+        return NULL;
+    }
+    mesh -> camera_verts = calloc(num_verts , sizeof(vec4_t));
+    if(mesh->camera_verts == NULL){
+        free(mesh->world_verts);
+        free(mesh);
+        return NULL;
+    }
+    mesh->vertex_count = num_verts;
+    mesh -> triangle_map = NULL;
+    mesh->  triangle_count = 0;
+    if(triangle_count != 0 && triangle_map != NULL){
+        mesh -> triangle_count = triangle_count;//these two parameters CAN be set to 0 in the case of wireframe rendering.
+        mesh -> triangle_map = triangle_map;
+    }
+    return mesh;
+}
+entity_t* create_entity(vec4_t pos, mesh_t *mesh){
+    entity_t *entity = calloc(1,sizeof(entity_t));
+    if(!entity) return NULL;
+    entity->color = (SDL_FColor){1.0f, 1.0f, 1.0f, 1.0f}; // Default to solid white
+    entity->pos = pos;
+    entity->velocity = (vec4_t){{{0,0,0,0}}};
+    entity->angular_velocity = (vec4_t){{{0,0,0,0}}};
+    entity->dirty = true;
+    entity->mesh = mesh;
+    entity->speed = 0.01f;
+    entity->angular_speed = 0.01f;
+    entity->angles = (eulerangles_t){0,0,0};
+    entity->collision_box = calloc(1, sizeof(collisionbox_t));
+    entity-> force_accumulator = (vec4_t){{{0,0,0,0}}};
+    entity -> acceleration = (vec4_t){{{0,0,0,0}}};
+    entity->collidable = true;
+    if(!entity->collision_box){free(entity);return NULL;}
+    *(entity->collision_box) = get_entity_collisionbox(entity->mesh);
+    rotate_entity(entity);
+    return entity;
+}
+entity_t* create_cube_entity(vec4_t pos, real length, real width, real height){
+    vec4_t* local_verts = create_cube_local_vertices(length, width, height);
+    int* triangle_map = create_cube_triangles();
+
+    if(local_verts == NULL || triangle_map == NULL){
+        if(local_verts)free(local_verts);
+        if(triangle_map)free(triangle_map);
+        return NULL;
+    }
+    mesh_t* cube_mesh = create_mesh(local_verts, 8,12,triangle_map);
+    entity_t* cube_entity = create_entity(pos, cube_mesh);
+    return cube_entity;
+}

@@ -1,0 +1,22 @@
+#ifndef GLOOP_H
+#define GLOOP_H
+#include "defines.h"
+#include "entities.h"
+#include <stdio.h>
+#include "projection_math.h"
+#include "camera.h"
+#include "timers.h"
+#include "rendering.h"
+#include "physics.h"
+#include "enemy.h"
+#include "pipeline.h"
+#include "particles.h"
+#include "handle_input.h"
+#include "scenes.h"
+#include "gun.h"
+#include "obj_parsing.h"
+bool initializeGame(SDL_Window** window, SDL_Renderer** renderer);
+void gameLoop();
+void cleanUp(SDL_Window* window, SDL_Renderer* renderer);
+
+#endif
