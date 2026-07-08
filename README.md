@@ -50,12 +50,9 @@ The project is a small FPS-style test bed: a walking/jumping camera, `.obj`-load
 - `.obj`/`.mtl` model assets (e.g. `gun.obj`, `Rtwo_low.obj`) available on the working directory path at runtime.
 
 ## Building
+BUILD -> make
+CLEAN -> make clean
 
-There's no build script included yet — compile all `.c` files together and link against SDL3, e.g.:
-
-```sh
-gcc *.c -o game -lSDL3 -lm -msse4.1 -O2
-```
 
 Adjust flags/paths as needed for your SDL3 installation and platform (Windows builds get a `getline` shim automatically via `obj_parsing.c`).
 
